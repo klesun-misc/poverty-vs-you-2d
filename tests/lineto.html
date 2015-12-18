@@ -1,0 +1,21 @@
+
+<script src="../libs/easeljs-0.8.2.combined.js"></script>
+<canvas id="demoCanvas" width="400" height="300"></canvas>
+
+<script>
+	
+	//Create a stage by getting a reference to the canvas
+	stage = new createjs.Stage("demoCanvas");
+	//Create a Shape DisplayObject.
+	circle = new createjs.Shape();
+	circle.graphics.beginFill("red").drawRect(0, 0, 40, 40);
+	circle.regX = circle.regY = 20;
+
+	circle.x = circle.y = 100;
+
+	//Add Shape instance to stage display list.
+	stage.addChild(circle);
+
+	stage.update();
+
+</script>

@@ -24,7 +24,7 @@ Ns.Person = function(params, isHero)
 
         var shape = new createjs.Shape();
 
-        var r = 10; // head radius
+        var r = 8; // head radius
         var t = r * 4; // torso length
 
         shape.graphics
