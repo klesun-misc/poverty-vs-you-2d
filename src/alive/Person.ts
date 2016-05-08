@@ -1,7 +1,10 @@
+///<reference path="../../libs/d.ts/easeljs.d.ts"/>
 
-///<reference path="../libs/d.ts/easeljs.d.ts"/>
+import {Tls} from "./../Tools";
+import {IAlive} from "./IAlive";
+import {IMissile} from "./Missile";
+import {Missile} from "./Missile";
 
-import {Tls} from "./Tools";
 interface IParams {
     // should return y position of floor
     floor: () => number,
@@ -9,7 +12,7 @@ interface IParams {
     y?: number,
 }
 
-export function Person(params: IParams, isHero?: boolean)
+export function Person(params: IParams, isHero?: boolean): IPerson
 {
     var floor = params.floor;
     isHero = isHero || false;
@@ -21,9 +24,21 @@ export function Person(params: IParams, isHero?: boolean)
 
     var boostX = 0;
     var boostY = 0;
+    var castingFireball = false;
 
     var vx = 0;
     var vy = -20;
+
+    var HEIGHT = 75;
+    var WIDTH = 55;
+
+
+    // game logic info
+    var health = 100;
+    var mana = 100;
+
+    var isAlive = true;
+    var producedChildren: IAlive[] = [];
 
     var makePersonShape = function()
     {
@@ -31,7 +46,7 @@ export function Person(params: IParams, isHero?: boolean)
 
         var spriteSheet = new createjs.SpriteSheet({
             images: ['imgs/run_sprite/spritesheet.png'],
-            frames: {width: 55, height: 75},
+            frames: {width: WIDTH, height: HEIGHT},
             animations: {
                 run: {
                     frames: [0,1,2,3,4,5,6,7,8,9,10,11],
@@ -41,8 +56,8 @@ export function Person(params: IParams, isHero?: boolean)
             framerate: 45,
         });
         var animation = new createjs.Sprite(spriteSheet, 'run');
-        animation.x = -30;
-        animation.y = -75;
+        animation.x = -WIDTH * 6/11;
+        animation.y = -HEIGHT;
 
         cont.addChild(animation);
 
@@ -78,7 +93,7 @@ export function Person(params: IParams, isHero?: boolean)
         }
     };
 
-    var live = function()
+    var applyGravity = function()
     {
         var lived = false;
         //var was = [shape.x, shape.y];
@@ -110,9 +125,28 @@ export function Person(params: IParams, isHero?: boolean)
         return lived;
     };
 
+    var live = function()
+    {
+        applyGravity();
+        if (castingFireball) {
+            castingFireball = false;
+            producedChildren.push(Missile(shape.x, shape.y - HEIGHT * 3/4, 15, 0));
+        }
+    };
+
     return {
-        haste: haste,
         live: live,
         getShape: () => shape,
+        isDead: () => false,
+        producedChildren: producedChildren,
+
+        // game logic methods
+        haste: haste,
+        fireball: () => castingFireball = true,
     };
 };
+
+export interface IPerson extends IAlive {
+    haste: (dvx: number, dvy: number) => void,
+    fireball: () => void,
+}

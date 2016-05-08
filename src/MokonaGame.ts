@@ -2,8 +2,11 @@
 ///<reference path="../libs/d.ts/easeljs.d.ts"/>
 
 import DisplayObject = createjs.DisplayObject;
-import {Person} from "./Person";
+import {Person} from "./alive/Person";
 import {Background} from "./Background";
+import {IPerson} from "./alive/Person";
+import {Kb} from "./KeyCodes";
+import {IAlive} from "./alive/IAlive";
 
 declare var Ns: any;
 
@@ -11,11 +14,32 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
 {
     /** dict of objects with method live()
      * the method returns true if something happened... my live would always return false =( */
-    var elements: IElement[] = [];
-
+    var elements: IAlive[] = [];
     var stage = new createjs.Stage(canvasEl);
+
+    var addElement = function(element: IAlive)
+    {
+        elements.push(element);
+        stage.addChild(element.getShape());
+
+        return element;
+    };
+
     setInterval(() => {
-        elements.forEach(el => el.live());
+        // not sure this slice() is ok for performance
+        elements.slice().forEach((el, i) => {
+            if (!el.isDead()) {
+                el.live();
+                if (el.producedChildren.length) {
+                    el.producedChildren
+                        .splice(0,el.producedChildren.length)
+                        .forEach(addElement);
+                }
+            } else {
+                stage.removeChild(el.getShape());
+                elements.splice(i, 1);
+            }
+        });
         stage.update();
     }, 40);
     //setInterval(() => elements.reduce((a,b) => a.live() | b.live()) && stage.update(), 40);
@@ -24,22 +48,15 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
     document.onkeydown = (e) =>
         e.keyCode in handlerDict && handlerDict[e.keyCode]();
 
-    var handleKey = (n: number,cb: () => void) => (handlerDict[n] = cb);
+    var listenKey = (n: number,cb: () => void) => (handlerDict[n] = cb);
     var floor = () => canvasEl.height - 20;
-
-    var addElement = function(element: IElement)
-    {
-        elements.push(element);
-        stage.addChild(element.getShape());
-
-        return element;
-    };
 
     var initKeyHandlers = function(hero: IPerson)
     {
-        handleKey(37, () => hero.haste(-1,0));
-        handleKey(38, () => hero.haste( 0,-1));
-        handleKey(39, () => hero.haste(+1,0));
+        listenKey(Kb.LEFT, () => hero.haste(-1,0)); // left
+        listenKey(Kb.UP, () => hero.haste( 0,-1)); // up
+        listenKey(Kb.RIGHT, () => hero.haste(+1,0)); // right
+        listenKey(Kb.SPACE, hero.fireball); // space
     };
 
     var start = function()
@@ -60,12 +77,3 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
         start: start
     };
 };
-
-interface IElement {
-    getShape: () => DisplayObject,
-    live: () => void,
-}
-
-interface IPerson extends IElement {
-    haste: (dvx: number, dvy: number) => void;
-}
