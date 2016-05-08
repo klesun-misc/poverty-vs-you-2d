@@ -2,9 +2,10 @@ var Ns = Ns || {};
 
 Ns.lim = (n,r,l) => Math.min(Math.max(n, l || -r), r);
 
-Ns.toZero = (x,dx) =>
-    x > 0 ? Math.max(0, x - dx) :
-    x < 0 ? Math.min(0, x + dx) :
+// decreases the vector x length by dx
+Ns.toZero = (vx,dvx) =>
+    vx > 0 ? Math.max(0, vx - dvx) :
+    vx < 0 ? Math.min(0, vx + dvx) :
     0;
 
 /** @param {Array} rgb1, rgb2, like [255,255,0] (yellow)

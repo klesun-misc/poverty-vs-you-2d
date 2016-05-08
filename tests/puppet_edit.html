@@ -1,0 +1,83 @@
+<pre>
+hello there
+i wanna animate 2d humanoids for my mega game
+here i'll test
+
+</pre>
+
+<script src="../libs/easeljs-0.8.2.combined.js"></script>
+
+<body onload="bodyLoaded();">
+<canvas id="demoCanvas" width="1000" height="500"></canvas>
+
+<script>
+
+var makeBody = function()
+{
+    var vertexes = {
+        left_foot: {x: -25, y: 0},
+        right_foot: {x: 25, y: 0},
+
+        left_knee: {x: -30, y: -30},
+        right_knee: {x: 30, y: -30},
+
+        left_hip: {x: -20, y: -60},
+        right_hip: {x: 20, y: -60},
+
+        left_shoulder: {x: -20, y: -100},
+        right_shoulder: {x: 20, y: -100},
+
+        left_elbow: {x: -30, y: -75},
+        right_elbow: {x: 30, y: -75},
+
+        left_arm: {x: -40, y: -50},
+        right_arm: {x: 40, y: -50}
+    };
+
+    var bounds = [
+        [vertexes.left_foot, vertexes.left_knee],
+        [vertexes.left_hip, vertexes.left_knee],
+        [vertexes.left_hip, vertexes.left_shoulder],
+        [vertexes.left_shoulder, vertexes.left_elbow],
+        [vertexes.left_elbow, vertexes.left_arm],
+
+        [vertexes.right_foot, vertexes.right_knee],
+        [vertexes.right_hip, vertexes.right_knee],
+        [vertexes.right_hip, vertexes.right_shoulder],
+        [vertexes.right_shoulder, vertexes.right_elbow],
+        [vertexes.right_elbow, vertexes.right_arm],
+
+        [vertexes.left_hip, vertexes.right_hip],
+        [vertexes.left_shoulder, vertexes.right_shoulder]
+    ];
+
+    return {
+        bounds: bounds,
+        vertexes: vertexes
+    };
+};
+
+var bodyLoaded = function()
+{
+    var stage = new createjs.Stage('demoCanvas');
+
+    var body = makeBody();
+
+    var person = new createjs.Shape();
+    stage.addChild(person);
+    person.x = 400; person.y = 400;
+
+    body.bounds.forEach(function(bound)
+    {
+        person.graphics.beginStroke("#f0f")
+            .moveTo(bound[0].x, bound[0].y)
+            .lineTo(bound[1].x, bound[1].y)
+            .drawCircle(bound[1].x, bound[1].y, 5)
+            .endStroke();
+    });
+
+    stage.update();
+};
+
+</script>
+</body>
