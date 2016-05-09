@@ -1,6 +1,9 @@
 
 import {IAlive} from "./IAlive";
 import DisplayObject = createjs.DisplayObject;
+import {rect_t} from "../MokonaGame";
+
+const BOUNDS: rect_t = [0,0,10,10];
 
 /** missile is (at least for now) a ball casted by
  * an IPerson, flying by a straight line, that
@@ -13,8 +16,9 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
     {
         var shape = new createjs.Shape();
 
+        var [dx,dy,w,h] = BOUNDS;
         shape.graphics
-            .beginFill('#0f0').drawCircle(0,0, 5);
+            .beginFill('#ff0').drawRect(dx,dy,w,h);
 
         shape.x = x;
         shape.y = y;
@@ -33,11 +37,20 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         }
     };
 
+    var interactWith = function(other: IAlive)
+    {
+        isDead = true;
+        other.takeDamage(40);
+    };
+
     return {
         getShape: () => shape,
         live: live,
         isDead: () => isDead,
         producedChildren: [],
+        getBounds: () => BOUNDS,
+        interactWith: interactWith,
+        takeDamage: () => isDead = true,
     };
 }
 

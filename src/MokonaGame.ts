@@ -10,6 +10,25 @@ import {IAlive} from "./alive/IAlive";
 
 declare var Ns: any;
 
+export type rect_t = [number, number, number, number];
+
+var doIntersect = function(a: IAlive, b: IAlive)
+{
+    var [ax,ay,aw,ah] = a.getBounds();
+    var [bx,by,bw,bh] = b.getBounds();
+
+    ax += a.getShape().x;
+    ay += a.getShape().y;
+
+    bx += b.getShape().x;
+    by += b.getShape().y;
+
+    return (ax >= bx + bw || ax + aw <= bx
+        || ay >= by + bh || ay + ah <= by)
+        ? false
+        : true;
+};
+
 export function MokonaGame(canvasEl: HTMLCanvasElement)
 {
     /** dict of objects with method live()
@@ -25,7 +44,8 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
         return element;
     };
 
-    setInterval(() => {
+    var newFrame = function()
+    {
         // not sure this slice() is ok for performance
         elements.slice().forEach((el, i) => {
             if (!el.isDead()) {
@@ -35,14 +55,16 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
                         .splice(0,el.producedChildren.length)
                         .forEach(addElement);
                 }
+
+                elements.filter(other => el !== other && doIntersect(el, other))
+                    .forEach(o => el.interactWith(o))
             } else {
                 stage.removeChild(el.getShape());
                 elements.splice(i, 1);
             }
         });
         stage.update();
-    }, 40);
-    //setInterval(() => elements.reduce((a,b) => a.live() | b.live()) && stage.update(), 40);
+    };
 
     var handlerDict: {[k: number]: () => void} = {};
     document.onkeydown = (e) =>
@@ -61,14 +83,14 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
 
     var start = function()
     {
-        //createjs.Ticker.setFPS(24);
-        //createjs.Ticker.addEventListener('tick', _ => stage.update());
+        createjs.Ticker.framerate = 24;
+        createjs.Ticker.addEventListener('tick', newFrame);
 
         stage.addChild(Background());
         var hero = Person({x: 100, y: floor(), floor: floor}, true);
 
         addElement(hero);
-        var villain = addElement(Person({x: 200, y: floor(), floor: floor}));
+        var villain = addElement(Person({x: 600, y: floor(), floor: floor}));
 
         initKeyHandlers(hero);
     };

@@ -4,6 +4,7 @@ import {Tls} from "./../Tools";
 import {IAlive} from "./IAlive";
 import {IMissile} from "./Missile";
 import {Missile} from "./Missile";
+import {rect_t} from "../MokonaGame";
 
 interface IParams {
     // should return y position of floor
@@ -12,15 +13,20 @@ interface IParams {
     y?: number,
 }
 
+const MAX_VX = 7.5;
+const DVX = 2;
+const DVY = 30;
+const G = 4;
+
+const HEIGHT = 75;
+const WIDTH = 55;
+
+const BOUNDS: rect_t = [-WIDTH * 8/55, -HEIGHT, WIDTH * 16/55, HEIGHT];
+
 export function Person(params: IParams, isHero?: boolean): IPerson
 {
     var floor = params.floor;
     isHero = isHero || false;
-
-    var MAX_VX = 10;
-    var DVX = 2;
-    var DVY = 30;
-    var G = 4;
 
     var boostX = 0;
     var boostY = 0;
@@ -29,16 +35,37 @@ export function Person(params: IParams, isHero?: boolean): IPerson
     var vx = 0;
     var vy = -20;
 
-    var HEIGHT = 75;
-    var WIDTH = 55;
-
-
     // game logic info
     var health = 100;
     var mana = 100;
+    var healthBar = new createjs.Shape();
+    var manaBar = new createjs.Shape();
 
-    var isAlive = true;
+    var isDead = false;
     var producedChildren: IAlive[] = [];
+
+    var changeMana = function(n: number)
+    {
+        if (mana + n >= 0 && mana + n <= 100) {
+            mana += n;
+            manaBar.graphics.clear().beginFill('#44f')
+                .rect(-WIDTH / 4, -HEIGHT - 5, mana / 100 * WIDTH / 2, 5);
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    var changeHealth = function(n: number)
+    {
+        health += n;
+        healthBar.graphics.clear().beginFill('#f00')
+            .rect(-WIDTH / 4, -HEIGHT - 12, health/100 * WIDTH / 2, 5);
+
+        if (health <= 0) {
+            isDead = true;
+        }
+    };
 
     var makePersonShape = function()
     {
@@ -63,20 +90,12 @@ export function Person(params: IParams, isHero?: boolean): IPerson
 
         var aura = new createjs.Shape();
 
-        var r = 8; // head radius
-        var t = r * 4; // torso length
-        //
-        //shape.graphics
-        //    .beginFill('#f00').drawCircle(0, -t * 2 - r, r) // head
-        //    .beginFill(isHero ? '#f80' : 'black').rect(-r, -t * 2, r * 2, t) // torso
-        //    .beginFill('#00f').rect(-r, -t, r * 2/3, t) // leg 1
-        //    .beginFill('#00f').rect(r * 1/3, -t, r * 2/3, t); // leg 2
-        //
-        //shape.graphics.beginFill('#ff0').rect(-1, -1, 2, 2);
-
-        aura.graphics.endFill().beginStroke('#88f').rect(-r, - 2 * t - 2 * r, r * 2, r * 2 + t * 2);
+        var [x,y,w,h] = BOUNDS;
+        aura.graphics.beginStroke('#88f').rect(x,y,w,h);
 
         cont.addChild(aura);
+        cont.addChild(healthBar);
+        cont.addChild(manaBar);
 
         cont.x = params.x || 50;
         cont.y = params.y || 50;
@@ -130,15 +149,29 @@ export function Person(params: IParams, isHero?: boolean): IPerson
         applyGravity();
         if (castingFireball) {
             castingFireball = false;
-            producedChildren.push(Missile(shape.x, shape.y - HEIGHT * 3/4, 15, 0));
+            if (changeMana(-33)) {
+                producedChildren.push(Missile(shape.x + WIDTH / 3, shape.y - HEIGHT * 3 / 4, 15, 0));
+            } else {
+                alert('Out of mana');
+            }
         }
+
+        changeMana(1);
+    };
+
+    var interactWith = function(other: IAlive)
+    {
+        console.log('Person pushed someone', other);
     };
 
     return {
         live: live,
         getShape: () => shape,
-        isDead: () => false,
+        isDead: () => isDead,
         producedChildren: producedChildren,
+        getBounds: () => BOUNDS,
+        interactWith: interactWith,
+        takeDamage: (n) => changeHealth(-n),
 
         // game logic methods
         haste: haste,

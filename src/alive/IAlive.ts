@@ -7,4 +7,7 @@ export interface IAlive {
     live: () => void,
     isDead: () => boolean,
     producedChildren: IAlive[],
+    getBounds: () => [number,number,number,number],
+    interactWith: (other: IAlive) => void,
+    takeDamage: (n: number) => void,
 }
