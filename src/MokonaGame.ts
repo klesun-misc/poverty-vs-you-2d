@@ -47,6 +47,7 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
     var newFrame = function()
     {
         // not sure this slice() is ok for performance
+        var idxShift = 0;
         elements.slice().forEach((el, i) => {
             if (!el.isDead()) {
                 el.live();
@@ -60,7 +61,7 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
                     .forEach(o => el.interactWith(o))
             } else {
                 stage.removeChild(el.getShape());
-                elements.splice(i, 1);
+                elements.splice(i + idxShift--, 1);
             }
         });
         stage.update();
