@@ -7,6 +7,7 @@ import {Background} from "./Background";
 import {IPerson} from "./alive/Person";
 import {Kb} from "./KeyCodes";
 import {IAlive} from "./alive/IAlive";
+import {Obstacle} from "./alive/Obstacle";
 
 declare var Ns: any;
 
@@ -49,16 +50,17 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
         // not sure this slice() is ok for performance
         var idxShift = 0;
         elements.slice().forEach((el, i) => {
-            if (!el.isDead()) {
-                el.live();
-                if (el.producedChildren.length) {
-                    el.producedChildren
-                        .splice(0,el.producedChildren.length)
-                        .forEach(addElement);
-                }
 
+            el.producedChildren.length &&
+            el.producedChildren
+                .splice(0,el.producedChildren.length)
+                .forEach(addElement);
+
+            if (!el.isDead()) {
+                var prevPos: [number, number] = [el.getShape().x, el.getShape().y];
+                el.live();
                 elements.filter(other => el !== other && doIntersect(el, other))
-                    .forEach(o => el.interactWith(o))
+                    .forEach(o => el.interactWith(o, prevPos))
             } else {
                 stage.removeChild(el.getShape());
                 elements.splice(i + idxShift--, 1);
@@ -82,16 +84,26 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
         listenKey(Kb.SPACE, hero.fireball); // space
     };
 
+    // supposed to read file with level data.
+    // for now just creates hardcoded setup
+    var fillStage = function()
+    {
+        var villain = addElement(Person({x: 600, y: floor(), floor: floor}));
+        var flyingBlock = addElement(Obstacle(300, 400,200, 50));
+        var flyingBlock2 = addElement(Obstacle(100, 300,50, 50));
+        var floorBlock = addElement(Obstacle(0, 475,900, 10));
+    };
+
     var start = function()
     {
         createjs.Ticker.framerate = 24;
         createjs.Ticker.addEventListener('tick', newFrame);
 
         stage.addChild(Background());
-        var hero = Person({x: 100, y: floor(), floor: floor}, true);
-
+        var hero = Person({x: 100, y: floor(), floor: floor});
         addElement(hero);
-        var villain = addElement(Person({x: 600, y: floor(), floor: floor}));
+
+        fillStage();
 
         initKeyHandlers(hero);
     };

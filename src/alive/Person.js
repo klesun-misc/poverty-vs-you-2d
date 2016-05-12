@@ -1,15 +1,17 @@
 ///<reference path="../../libs/d.ts/easeljs.d.ts"/>
-define(["require", "exports", "./../Tools", "./Missile"], function (require, exports, Tools_1, Missile_1) {
+define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (require, exports, Tools_1, Missile_1, Tools_2) {
     var MAX_VX = 7.5;
     var DVX = 2;
     var DVY = 30;
     var G = 4;
     var HEIGHT = 75;
     var WIDTH = 55;
-    var BOUNDS = [-WIDTH * 8 / 55, -HEIGHT, WIDTH * 16 / 55, HEIGHT];
-    function Person(params, isHero) {
-        var floor = params.floor;
-        isHero = isHero || false;
+    var BOUNDS = [-WIDTH * 8 / 55, -HEIGHT * 9 / 10, WIDTH * 16 / 55, HEIGHT * 9 / 10];
+    function Person(params) {
+        var floorAlive = null;
+        var floor = function () { return floorAlive !== null
+            ? floorAlive.getShape().y + floorAlive.getBounds()[1]
+            : 999999999999999999; };
         var boostX = 0;
         var boostY = 0;
         var castingFireball = false;
@@ -70,52 +72,72 @@ define(["require", "exports", "./../Tools", "./Missile"], function (require, exp
         };
         var shape = makePersonShape();
         var haste = function (dvx, dvy) {
-            if (shape.y === floor()) {
-                boostX = dvx;
-                boostY = dvy;
+            boostX = dvx;
+            boostY = dvy;
+        };
+        var getVector = function () { return floorAlive !== null
+            ? Tools_2.vadd([vx, vy], floorAlive.getVector())
+            : [vx, vy]; };
+        var applyGravity = function () {
+            if (floorAlive !== null) {
+                vx += DVX * boostX;
+                boostX = 0;
+                vy += DVY * boostY;
+                boostY = 0;
+            }
+            shape.x += getVector()[0];
+            shape.y += getVector()[1];
+            shape.y < floor()
+                ? vy += G
+                : vx = Tools_1.Tls.lim(Tools_1.Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
+            if (shape.y >= floor()) {
+                vy = 0;
+                shape.y = floor();
+            }
+            if (shape.x < 0) {
+                vx = 0;
+                shape.x = 0;
+            }
+            if (floorAlive !== null && (shape.y !== floorAlive.getShape().y + floorAlive.getBounds()[1] ||
+                shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
+                shape.x + BOUNDS[0] > floorAlive.getShape().x + floorAlive.getBounds()[0] + floorAlive.getBounds()[2])) {
+                floorAlive = null;
             }
         };
-        var applyGravity = function () {
-            var lived = false;
-            //var was = [shape.x, shape.y];
-            vx += DVX * boostX;
-            boostX = 0;
-            vy += DVY * boostY;
-            boostY = 0;
-            if (vx || vy || shape.y < floor()) {
-                shape.x += vx;
-                shape.y += vy;
-                shape.y < floor()
-                    ? vy += G
-                    : vx = Tools_1.Tls.lim(Tools_1.Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
-                if (shape.y >= floor()) {
-                    vy = 0;
-                    shape.y = floor();
-                }
-                if (shape.x < 0) {
-                    vx = 0;
-                    shape.x = 0;
-                }
-                lived = true;
+        var interactWith = function (other, prevPos) {
+            var adx = BOUNDS[0], ady = BOUNDS[1], aw = BOUNDS[2], ah = BOUNDS[3];
+            var _a = other.getBounds(), bdx = _a[0], bdy = _a[1], bw = _a[2], bh = _a[3];
+            var wasX = prevPos[0], wasY = prevPos[1];
+            if (wasY + ady + ah <= other.getShape().y + bdy) {
+                // move this top
+                shape.y = other.getShape().y + bdy - ady - ah;
+                floorAlive = other;
             }
-            //var lived = [shape.x, shape.y].some((e,i) => e != was[i]);
-            return lived;
+            else if (wasY + ady >= other.getShape().y + bdy + bh) {
+                // move this bottom
+                shape.y = other.getShape().y + bdy + bh - ady;
+            }
+            else if (wasX + adx + aw <= other.getShape().x + bdx) {
+                // move this left
+                shape.x = other.getShape().x + bdx - adx - aw;
+            }
+            else if (wasX + adx >= other.getShape().x + bdx + bw) {
+                // move this right
+                shape.x = other.getShape().x + bdx + bw - adx;
+            }
         };
         var live = function () {
             applyGravity();
             if (castingFireball) {
                 castingFireball = false;
                 if (changeMana(-33)) {
-                    producedChildren.push(Missile_1.Missile(shape.x + WIDTH / 3, shape.y - HEIGHT * 3 / 4, 15, 0));
+                    producedChildren.push(Missile_1.Missile(shape.x - WIDTH / 3 - 50, shape.y - HEIGHT * 3 / 4, 1, 0));
                 }
                 else {
                     alert('Out of mana');
                 }
             }
             changeMana(1);
-        };
-        var interactWith = function (other) {
-            console.log('Person pushed someone', other);
         };
         return {
             live: live,
@@ -125,6 +147,7 @@ define(["require", "exports", "./../Tools", "./Missile"], function (require, exp
             getBounds: function () { return BOUNDS; },
             interactWith: interactWith,
             takeDamage: function (n) { return changeHealth(-n); },
+            getVector: getVector,
             // game logic methods
             haste: haste,
             fireball: function () { return castingFireball = true; }

@@ -6,8 +6,9 @@ export interface IAlive {
     getShape: () => DisplayObject,
     live: () => void,
     isDead: () => boolean,
-    producedChildren: IAlive[],
+    producedChildren: IAlive[], // TODO: it should be returned by live(), not stored as property!
     getBounds: () => [number,number,number,number],
-    interactWith: (other: IAlive) => void,
+    interactWith: (other: IAlive, prevPos: [number, number]) => void,
     takeDamage: (n: number) => void,
+    getVector: () => [number, number],
 }

@@ -27,3 +27,6 @@ export class Tls
         return [rgbStart[0] + dr, rgbStart[1] + dg, rgbStart[2] + db];
     };
 }
+
+/** @return - sum of two vectors */
+export var vadd = (vA: [number,number], vB: number[]): [number, number] => [vA[0] + vB[0], vA[1] + vB[1]];

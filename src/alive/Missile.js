@@ -1,5 +1,6 @@
 define(["require", "exports"], function (require, exports) {
-    var BOUNDS = [0, 0, 10, 10];
+    var BOUNDS = [0, 0, 50, 10];
+    var MAX_VX = 15;
     /** missile is (at least for now) a ball casted by
      * an IPerson, flying by a straight line, that
      * explodes and damages another IPerson on contact */
@@ -18,11 +19,12 @@ define(["require", "exports"], function (require, exports) {
         var live = function () {
             shape.x += vx;
             shape.y += vy;
+            vx = Math.max(-MAX_VX, Math.min(vx * 1.075, MAX_VX));
             if (shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
                 isDead = true;
             }
         };
-        var interactWith = function (other) {
+        var interactWith = function (other, prevPos) {
             isDead = true;
             other.takeDamage(40);
         };
@@ -33,7 +35,8 @@ define(["require", "exports"], function (require, exports) {
             producedChildren: [],
             getBounds: function () { return BOUNDS; },
             interactWith: interactWith,
-            takeDamage: function () { return isDead = true; }
+            takeDamage: function () { return isDead = true; },
+            getVector: function () { return [vx, vy]; }
         };
     }
     exports.Missile = Missile;

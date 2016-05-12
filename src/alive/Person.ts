@@ -5,6 +5,7 @@ import {IAlive} from "./IAlive";
 import {IMissile} from "./Missile";
 import {Missile} from "./Missile";
 import {rect_t} from "../MokonaGame";
+import {vadd} from "../Tools";
 
 interface IParams {
     // should return y position of floor
@@ -21,12 +22,14 @@ const G = 4;
 const HEIGHT = 75;
 const WIDTH = 55;
 
-const BOUNDS: rect_t = [-WIDTH * 8/55, -HEIGHT, WIDTH * 16/55, HEIGHT];
+const BOUNDS: rect_t = [-WIDTH * 8/55, -HEIGHT * 9/10, WIDTH * 16/55, HEIGHT * 9/10];
 
-export function Person(params: IParams, isHero?: boolean): IPerson
+export function Person(params: IParams): IPerson
 {
-    var floor = params.floor;
-    isHero = isHero || false;
+    var floorAlive: IAlive = null;
+    var floor = () => floorAlive !== null
+        ? floorAlive.getShape().y + floorAlive.getBounds()[1]
+        : 999999999999999999;
 
     var boostX = 0;
     var boostY = 0;
@@ -106,42 +109,70 @@ export function Person(params: IParams, isHero?: boolean): IPerson
     var shape = makePersonShape();
 
     var haste = function(dvx: number,dvy: number) {
-        if (shape.y === floor()) {
-            boostX = dvx;
-            boostY = dvy;
-        }
+        boostX = dvx;
+        boostY = dvy;
     };
+
+    var getVector = (): [number, number] => floorAlive !== null
+        ? vadd([vx, vy], floorAlive.getVector())
+        : [vx, vy];
 
     var applyGravity = function()
     {
-        var lived = false;
-        //var was = [shape.x, shape.y];
-
-        vx += DVX * boostX; boostX = 0;
-        vy += DVY * boostY; boostY = 0;
-
-        if (vx || vy || shape.y < floor()) {
-            shape.x += vx;
-            shape.y += vy;
-            shape.y < floor()
-                ? vy += G
-                : vx = Tls.lim(Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
-
-
-            if (shape.y >= floor()) {
-                vy = 0;
-                shape.y = floor();
-            }
-            if (shape.x < 0) {
-                vx = 0;
-                shape.x = 0;
-            }
-
-            lived = true;
+        if (floorAlive !== null) {
+            vx += DVX * boostX; boostX = 0;
+            vy += DVY * boostY; boostY = 0;
         }
 
-        //var lived = [shape.x, shape.y].some((e,i) => e != was[i]);
-        return lived;
+        shape.x += getVector()[0];
+        shape.y += getVector()[1];
+        shape.y < floor()
+            ? vy += G
+            : vx = Tls.lim(Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
+
+
+        if (shape.y >= floor()) {
+            vy = 0;
+            shape.y = floor();
+        }
+        if (shape.x < 0) {
+            vx = 0;
+            shape.x = 0;
+        }
+
+        if (floorAlive !== null && (
+            shape.y !== floorAlive.getShape().y + floorAlive.getBounds()[1] ||
+            shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
+            shape.x + BOUNDS[0] > floorAlive.getShape().x + floorAlive.getBounds()[0] + floorAlive.getBounds()[2]
+        )) {
+            floorAlive = null;
+        }
+    };
+
+    var interactWith = function(other: IAlive, prevPos: [number, number])
+    {
+        var [adx,ady,aw,ah] = BOUNDS;
+        var [bdx,bdy,bw,bh] = other.getBounds();
+
+        var [wasX, wasY] = prevPos;
+
+        if (wasY + ady + ah <= other.getShape().y + bdy) {
+            // move this top
+            shape.y = other.getShape().y + bdy - ady - ah;
+            floorAlive = other;
+
+        } else if (wasY + ady >= other.getShape().y + bdy + bh) {
+            // move this bottom
+            shape.y = other.getShape().y + bdy + bh - ady;
+
+        } else if (wasX + adx + aw <= other.getShape().x + bdx) {
+            // move this left
+            shape.x = other.getShape().x + bdx - adx - aw;
+
+        } else if (wasX + adx >= other.getShape().x + bdx + bw) {
+            // move this right
+            shape.x = other.getShape().x + bdx + bw - adx;
+        }
     };
 
     var live = function()
@@ -150,18 +181,13 @@ export function Person(params: IParams, isHero?: boolean): IPerson
         if (castingFireball) {
             castingFireball = false;
             if (changeMana(-33)) {
-                producedChildren.push(Missile(shape.x + WIDTH / 3, shape.y - HEIGHT * 3 / 4, 15, 0));
+                producedChildren.push(Missile(shape.x - WIDTH / 3 - 50, shape.y - HEIGHT * 3 / 4, 1, 0));
             } else {
                 alert('Out of mana');
             }
         }
 
         changeMana(1);
-    };
-
-    var interactWith = function(other: IAlive)
-    {
-        console.log('Person pushed someone', other);
     };
 
     return {
@@ -172,6 +198,7 @@ export function Person(params: IParams, isHero?: boolean): IPerson
         getBounds: () => BOUNDS,
         interactWith: interactWith,
         takeDamage: (n) => changeHealth(-n),
+        getVector: getVector,
 
         // game logic methods
         haste: haste,

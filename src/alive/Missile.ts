@@ -3,7 +3,8 @@ import {IAlive} from "./IAlive";
 import DisplayObject = createjs.DisplayObject;
 import {rect_t} from "../MokonaGame";
 
-const BOUNDS: rect_t = [0,0,10,10];
+const BOUNDS: rect_t = [0,0,50,10];
+const MAX_VX = 15;
 
 /** missile is (at least for now) a ball casted by
  * an IPerson, flying by a straight line, that
@@ -32,12 +33,14 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         shape.x += vx;
         shape.y += vy;
 
+        vx = Math.max(-MAX_VX, Math.min(vx * 1.075, MAX_VX));
+
         if (shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
             isDead = true;
         }
     };
 
-    var interactWith = function(other: IAlive)
+    var interactWith = function(other: IAlive, prevPos: [number, number])
     {
         isDead = true;
         other.takeDamage(40);
@@ -51,6 +54,7 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         getBounds: () => BOUNDS,
         interactWith: interactWith,
         takeDamage: () => isDead = true,
+        getVector: () => [vx, vy],
     };
 }
 
