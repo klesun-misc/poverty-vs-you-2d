@@ -103,11 +103,8 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
                 vy = 0;
                 shape.y = floor();
             }
-            if (shape.x < 0) {
-                vx = 0;
-                shape.x = 0;
-            }
-            if (floorAlive !== null && (shape.y !== floorAlive.getShape().y + floorAlive.getBounds()[1] ||
+            if (floorAlive !== null && (floorAlive.isDead() ||
+                shape.y !== floorAlive.getShape().y + floorAlive.getBounds()[1] ||
                 shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
                 shape.x + BOUNDS[0] > floorAlive.getShape().x + floorAlive.getBounds()[0] + floorAlive.getBounds()[2])) {
                 floorAlive = null;

@@ -1,5 +1,4 @@
 define(["require", "exports"], function (require, exports) {
-    var BOUNDS = [0, 0, 10, 10];
     /* an Obstacle is rectangular unchangeable object that person can
      * stand on also blocks path. you can not go through an Obstacle
      * nor from left, nor from right, nor from bottom*/

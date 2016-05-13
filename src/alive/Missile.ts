@@ -12,6 +12,7 @@ const MAX_VX = 15;
 export function Missile(x: number, y: number, vx: number, vy: number): IMissile
 {
     var isDead = false;
+    var fuel = 600;
 
     var makeShape = function(): DisplayObject
     {
@@ -33,9 +34,12 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         shape.x += vx;
         shape.y += vy;
 
+        fuel -= Math.sqrt(vx ** 2 + vy ** 2);
+        shape.alpha = fuel / 600;
+
         vx = Math.max(-MAX_VX, Math.min(vx * 1.075, MAX_VX));
 
-        if (shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
+        if (fuel <= 0 || shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
             isDead = true;
         }
 

@@ -36,6 +36,7 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
      * the method returns true if something happened... my live would always return false =( */
     var elements: IAlive[] = [];
     var stage = new createjs.Stage(canvasEl);
+    var background = Background();
 
     var addElement = function(element: IAlive)
     {
@@ -66,6 +67,18 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
         stage.update();
     };
 
+    var moveCam = function(dx: number, dy: number)
+    {
+        background.x -= dx / 2;
+        background.y -= dy / 2;
+
+        elements.forEach(a => {
+            var sh = a.getShape();
+            sh.x -= dx;
+            sh.y -= dy;
+        });
+    };
+
     var handlerDict: {[k: number]: () => void} = {};
     document.onkeydown = (e) =>
         e.keyCode in handlerDict && handlerDict[e.keyCode]();
@@ -79,13 +92,18 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
         listenKey(Kb.UP, () => hero.haste( 0,-1)); // up
         listenKey(Kb.RIGHT, () => hero.haste(+1,0)); // right
         listenKey(Kb.SPACE, hero.fireball); // space
+
+        listenKey(Kb.NUMPAD6, () => moveCam(+10,0));
+        listenKey(Kb.NUMPAD4, () => moveCam(-10,0));
+        listenKey(Kb.NUMPAD8, () => moveCam(0,-10));
+        listenKey(Kb.NUMPAD5, () => moveCam(0,+10));
     };
 
     // supposed to read file with level data.
     // for now just creates hardcoded setup
     var fillStage = function()
     {
-        var villain = addElement(Person({x: 600, y: floor(), floor: floor}));
+        var villain = addElement(Person({x: 600, y: floor()}));
         var flyingBlock = addElement(Obstacle(300, 400,200, 50));
         var flyingBlock2 = addElement(Obstacle(100, 300,50, 50));
         var floorBlock = addElement(Obstacle(0, 475,900, 10));
@@ -93,11 +111,22 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
 
     var start = function()
     {
-        createjs.Ticker.framerate = 24;
-        createjs.Ticker.addEventListener('tick', newFrame);
+        stage.addChild(background);
+        var hero = Person({x: 100, y: floor()});
 
-        stage.addChild(Background());
-        var hero = Person({x: 100, y: floor(), floor: floor});
+        createjs.Ticker.framerate = 24;
+        createjs.Ticker.addEventListener('tick', () => {
+            newFrame();
+
+            var sh = hero.getShape();
+            var [dx,dy,w,h] = hero.getBounds();
+            var heroX = sh.x + dx + w / 2;
+            var camCenter = 500;
+            if (Math.abs(camCenter - heroX) >= 1) {
+                moveCam(heroX - camCenter, 0);
+            }
+        });
+
         addElement(hero);
 
         fillStage();

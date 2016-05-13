@@ -6,6 +6,7 @@ define(["require", "exports"], function (require, exports) {
      * explodes and damages another IPerson on contact */
     function Missile(x, y, vx, vy) {
         var isDead = false;
+        var fuel = 600;
         var makeShape = function () {
             var shape = new createjs.Shape();
             var dx = BOUNDS[0], dy = BOUNDS[1], w = BOUNDS[2], h = BOUNDS[3];
@@ -19,8 +20,10 @@ define(["require", "exports"], function (require, exports) {
         var live = function () {
             shape.x += vx;
             shape.y += vy;
+            fuel -= Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+            shape.alpha = fuel / 600;
             vx = Math.max(-MAX_VX, Math.min(vx * 1.075, MAX_VX));
-            if (shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
+            if (fuel <= 0 || shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
                 isDead = true;
             }
             return [];

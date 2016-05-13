@@ -8,8 +8,6 @@ import {rect_t} from "../MokonaGame";
 import {vadd} from "../Tools";
 
 interface IParams {
-    // should return y position of floor
-    floor: () => number,
     x?: number,
     y?: number,
 }
@@ -141,17 +139,13 @@ export function Person(params: IParams): IPerson
             ? vy += G
             : vx = Tls.lim(Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
 
-
         if (shape.y >= floor()) {
             vy = 0;
             shape.y = floor();
         }
-        if (shape.x < 0) {
-            vx = 0;
-            shape.x = 0;
-        }
 
         if (floorAlive !== null && (
+            floorAlive.isDead() ||
             shape.y !== floorAlive.getShape().y + floorAlive.getBounds()[1] ||
             shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
             shape.x + BOUNDS[0] > floorAlive.getShape().x + floorAlive.getBounds()[0] + floorAlive.getBounds()[2]
