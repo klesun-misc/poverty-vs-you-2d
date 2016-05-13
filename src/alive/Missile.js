@@ -18,8 +18,6 @@ define(["require", "exports"], function (require, exports) {
         };
         var shape = makeShape();
         var live = function () {
-            shape.x += vx;
-            shape.y += vy;
             fuel -= Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
             shape.alpha = fuel / 600;
             vx = Math.max(-MAX_VX, Math.min(vx * 1.075, MAX_VX));

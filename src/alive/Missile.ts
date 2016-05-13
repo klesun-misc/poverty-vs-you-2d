@@ -31,9 +31,6 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
 
     var live = function(): IAlive[]
     {
-        shape.x += vx;
-        shape.y += vy;
-
         fuel -= Math.sqrt(vx ** 2 + vy ** 2);
         shape.alpha = fuel / 600;
 

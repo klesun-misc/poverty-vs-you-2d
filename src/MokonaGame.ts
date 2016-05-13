@@ -30,7 +30,7 @@ var doIntersect = function(a: IAlive, b: IAlive)
         : true;
 };
 
-export function MokonaGame(canvasEl: HTMLCanvasElement)
+export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLFieldSetElement)
 {
     /** dict of objects with method live()
      * the method returns true if something happened... my live would always return false =( */
@@ -54,6 +54,9 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
 
             if (!el.isDead()) {
                 var prevPos: [number, number] = [el.getShape().x, el.getShape().y];
+
+                el.getShape().x += el.getVector()[0];
+                el.getShape().y += el.getVector()[1];
 
                 el.live().forEach(addElement);
 

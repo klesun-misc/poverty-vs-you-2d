@@ -128,21 +128,21 @@ export function Person(params: IParams): IPerson
 
     var applyGravity = function()
     {
-        if (floorAlive !== null) {
-            vx += DVX * boostX; boostX = 0;
-            vy += DVY * boostY; boostY = 0;
-        }
-
-        shape.x += getVector()[0];
-        shape.y += getVector()[1];
-        shape.y < floor()
-            ? vy += G
-            : vx = Tls.lim(Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
-
         if (shape.y >= floor()) {
             vy = 0;
             shape.y = floor();
         }
+
+        if (floorAlive !== null) {
+            vx += DVX * boostX; boostX = 0;
+            vy += DVY * boostY; boostY = 0;
+        } else {
+            boostX = boostY = 0;
+        }
+
+        shape.y < floor()
+            ? vy += G
+            : vx = Tls.lim(Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
 
         if (floorAlive !== null && (
             floorAlive.isDead() ||
@@ -150,6 +150,8 @@ export function Person(params: IParams): IPerson
             shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
             shape.x + BOUNDS[0] > floorAlive.getShape().x + floorAlive.getBounds()[0] + floorAlive.getBounds()[2]
         )) {
+            var [fvx,fvy] = floorAlive.getVector();
+            [vx,vy] = [vx + fvx / 10, vy + fvy / 10];
             floorAlive = null;
         }
     };
@@ -188,9 +190,10 @@ export function Person(params: IParams): IPerson
         if (castingFireball) {
             castingFireball = false;
             if (changeMana(-33)) {
+                var v = 2;
                 var args = faceForward
-                    ? [shape.x + BOUNDS[0] - 50 - 10, shape.y - HEIGHT * 3 / 4, 1, 0]
-                    : [shape.x + BOUNDS[0] + BOUNDS[2] + 10, shape.y - HEIGHT * 3 / 4, -1, 0];
+                    ? [shape.x + BOUNDS[0] - 50 - 10, shape.y - HEIGHT * 3 / 4, v, 0]
+                    : [shape.x + BOUNDS[0] + BOUNDS[2] + 10, shape.y - HEIGHT * 3 / 4, -v, 0];
                 producedChildren.push(Missile.apply(this, args));
             } else {
                 alert('Out of mana');

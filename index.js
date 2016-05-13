@@ -7,5 +7,8 @@ var wanted = [
 ];
 
 requirejs(wanted, (MokonaGame) =>
-    MokonaGame.MokonaGame(document.getElementById('demoCanvas')).start());
+    MokonaGame.MokonaGame(
+        document.getElementById('demoCanvas'),
+        document.getElementById('editorPalette')
+    ).start());
 

@@ -88,27 +88,31 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
             ? Tools_2.vadd([vx, vy], floorAlive.getVector())
             : [vx, vy]; };
         var applyGravity = function () {
+            if (shape.y >= floor()) {
+                vy = 0;
+                shape.y = floor();
+            }
             if (floorAlive !== null) {
                 vx += DVX * boostX;
                 boostX = 0;
                 vy += DVY * boostY;
                 boostY = 0;
             }
-            shape.x += getVector()[0];
-            shape.y += getVector()[1];
+            else {
+                boostX = boostY = 0;
+            }
             shape.y < floor()
                 ? vy += G
                 : vx = Tools_1.Tls.lim(Tools_1.Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
-            if (shape.y >= floor()) {
-                vy = 0;
-                shape.y = floor();
-            }
             if (floorAlive !== null && (floorAlive.isDead() ||
                 shape.y !== floorAlive.getShape().y + floorAlive.getBounds()[1] ||
                 shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
                 shape.x + BOUNDS[0] > floorAlive.getShape().x + floorAlive.getBounds()[0] + floorAlive.getBounds()[2])) {
+                var _a = floorAlive.getVector(), fvx = _a[0], fvy = _a[1];
+                _b = [vx + fvx / 10, vy + fvy / 10], vx = _b[0], vy = _b[1];
                 floorAlive = null;
             }
+            var _b;
         };
         var interactWith = function (other, prevPos) {
             var adx = BOUNDS[0], ady = BOUNDS[1], aw = BOUNDS[2], ah = BOUNDS[3];
@@ -138,9 +142,10 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
             if (castingFireball) {
                 castingFireball = false;
                 if (changeMana(-33)) {
+                    var v = 2;
                     var args = faceForward
-                        ? [shape.x + BOUNDS[0] - 50 - 10, shape.y - HEIGHT * 3 / 4, 1, 0]
-                        : [shape.x + BOUNDS[0] + BOUNDS[2] + 10, shape.y - HEIGHT * 3 / 4, -1, 0];
+                        ? [shape.x + BOUNDS[0] - 50 - 10, shape.y - HEIGHT * 3 / 4, v, 0]
+                        : [shape.x + BOUNDS[0] + BOUNDS[2] + 10, shape.y - HEIGHT * 3 / 4, -v, 0];
                     producedChildren.push(Missile_1.Missile.apply(this, args));
                 }
                 else {
