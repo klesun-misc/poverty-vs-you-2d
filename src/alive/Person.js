@@ -22,6 +22,9 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
         var mana = 100;
         var healthBar = new createjs.Shape();
         var manaBar = new createjs.Shape();
+        var vectorMarker = new createjs.Shape();
+        vectorMarker.graphics.beginFill('#ff0').drawCircle(0, 0, 3);
+        vectorMarker.alpha = 0.4;
         var spriteSheet = new createjs.SpriteSheet({
             images: ['imgs/run_sprite/spritesheet.png'],
             frames: { width: WIDTH, height: HEIGHT },
@@ -67,9 +70,15 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
             cont.addChild(aura);
             cont.addChild(healthBar);
             cont.addChild(manaBar);
+            cont.addChild(vectorMarker);
             cont.x = params.x || 50;
             cont.y = params.y || 50;
             return cont;
+        };
+        var updateVectorMarker = function () {
+            var x = BOUNDS[0], y = BOUNDS[1], w = BOUNDS[2], h = BOUNDS[3];
+            vectorMarker.x = x + w / 2 + vx * 4;
+            vectorMarker.y = y + h / 1 / 4 + vy * 4;
         };
         var shape = makePersonShape();
         var haste = function (dvx, dvy) {
@@ -92,15 +101,6 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
                 vy = 0;
                 shape.y = floor();
             }
-            if (floorAlive !== null) {
-                vx += DVX * boostX;
-                boostX = 0;
-                vy += DVY * boostY;
-                boostY = 0;
-            }
-            else {
-                boostX = boostY = 0;
-            }
             shape.y < floor()
                 ? vy += G
                 : vx = Tools_1.Tls.lim(Tools_1.Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
@@ -111,6 +111,15 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
                 var _a = floorAlive.getVector(), fvx = _a[0], fvy = _a[1];
                 _b = [vx + fvx / 10, vy + fvy / 10], vx = _b[0], vy = _b[1];
                 floorAlive = null;
+            }
+            if (floorAlive !== null) {
+                vx += DVX * boostX;
+                boostX = 0;
+                vy += DVY * boostY;
+                boostY = 0;
+            }
+            else {
+                boostX = boostY = 0;
             }
             var _b;
         };
@@ -139,6 +148,7 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
         var live = function () {
             var producedChildren = [];
             applyGravity();
+            updateVectorMarker();
             if (castingFireball) {
                 castingFireball = false;
                 if (changeMana(-33)) {

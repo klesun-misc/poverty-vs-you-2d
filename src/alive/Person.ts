@@ -42,6 +42,9 @@ export function Person(params: IParams): IPerson
 
     var healthBar = new createjs.Shape();
     var manaBar = new createjs.Shape();
+    var vectorMarker = new createjs.Shape();
+    vectorMarker.graphics.beginFill('#ff0').drawCircle(0,0,3);
+    vectorMarker.alpha = 0.4;
 
     var spriteSheet = new createjs.SpriteSheet({
         images: ['imgs/run_sprite/spritesheet.png'],
@@ -100,11 +103,20 @@ export function Person(params: IParams): IPerson
         cont.addChild(aura);
         cont.addChild(healthBar);
         cont.addChild(manaBar);
+        cont.addChild(vectorMarker);
 
         cont.x = params.x || 50;
         cont.y = params.y || 50;
 
         return cont;
+    };
+
+    var updateVectorMarker = function()
+    {
+        var [x,y,w,h] = BOUNDS;
+
+        vectorMarker.x = x + w / 2 + vx * 4;
+        vectorMarker.y = y + h / 1/4 + vy * 4;
     };
 
     var shape = makePersonShape();
@@ -133,13 +145,6 @@ export function Person(params: IParams): IPerson
             shape.y = floor();
         }
 
-        if (floorAlive !== null) {
-            vx += DVX * boostX; boostX = 0;
-            vy += DVY * boostY; boostY = 0;
-        } else {
-            boostX = boostY = 0;
-        }
-
         shape.y < floor()
             ? vy += G
             : vx = Tls.lim(Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
@@ -153,6 +158,13 @@ export function Person(params: IParams): IPerson
             var [fvx,fvy] = floorAlive.getVector();
             [vx,vy] = [vx + fvx / 10, vy + fvy / 10];
             floorAlive = null;
+        }
+
+        if (floorAlive !== null) {
+            vx += DVX * boostX; boostX = 0;
+            vy += DVY * boostY; boostY = 0;
+        } else {
+            boostX = boostY = 0;
         }
     };
 
@@ -187,6 +199,8 @@ export function Person(params: IParams): IPerson
         var producedChildren: IAlive[] = [];
 
         applyGravity();
+        updateVectorMarker();
+
         if (castingFireball) {
             castingFireball = false;
             if (changeMana(-33)) {

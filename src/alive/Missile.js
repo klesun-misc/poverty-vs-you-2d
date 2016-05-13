@@ -7,6 +7,7 @@ define(["require", "exports"], function (require, exports) {
     function Missile(x, y, vx, vy) {
         var isDead = false;
         var fuel = 600;
+        var startVelocity = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
         var makeShape = function () {
             var shape = new createjs.Shape();
             var dx = BOUNDS[0], dy = BOUNDS[1], w = BOUNDS[2], h = BOUNDS[3];
@@ -28,7 +29,8 @@ define(["require", "exports"], function (require, exports) {
         };
         var interactWith = function (other, prevPos) {
             isDead = true;
-            other.takeDamage(40);
+            var v = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+            other.takeDamage(4 * v);
         };
         return {
             getShape: function () { return shape; },

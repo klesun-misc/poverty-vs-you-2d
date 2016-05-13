@@ -13,6 +13,7 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
 {
     var isDead = false;
     var fuel = 600;
+    var startVelocity = Math.sqrt(vx ** 2 + vy ** 2);
 
     var makeShape = function(): DisplayObject
     {
@@ -46,7 +47,8 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
     var interactWith = function(other: IAlive, prevPos: [number, number])
     {
         isDead = true;
-        other.takeDamage(40);
+        var v = Math.sqrt(vx ** 2 + vy **2);
+        other.takeDamage(4 * v);
     };
 
     return {
