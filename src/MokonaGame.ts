@@ -1,5 +1,6 @@
 
 ///<reference path="../libs/d.ts/easeljs.d.ts"/>
+///<reference path="../libs/d.ts/jquery.d.ts"/>
 
 import DisplayObject = createjs.DisplayObject;
 import {Person} from "./alive/Person";
@@ -46,6 +47,12 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         return element;
     };
 
+    var removeElement = function(element: IAlive)
+    {
+        stage.removeChild(element.getShape());
+        elements.splice(elements.indexOf(element), 1);
+    };
+
     var newFrame = function()
     {
         // not sure this slice() is ok for performance
@@ -89,6 +96,33 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
     var listenKey = (n: number,cb: () => void) => (handlerDict[n] = cb);
     var floor = () => canvasEl.height - 20;
 
+    var handleMouseUp = function(x: number, y: number)
+    {
+    };
+
+    var handleMouseMove = function(x: number, y: number)
+    {
+    };
+
+    const handleMouseDown = function(x0: number, y0: number)
+    {
+        var selectedTool = $(editorPalette).find('input[name="selectedTool"]:checked').val();
+
+        if (selectedTool === 'draw') {
+            var currentObs = addElement(Obstacle(x0, y0, 5, 5));
+            var finished = false;
+
+            handleMouseMove = (x1, y1) => {
+                if (!finished) {
+                    removeElement(currentObs);
+                    currentObs = addElement(Obstacle(x0, y0, x1 - x0, y1 - y0));
+                }
+            };
+
+            handleMouseUp = () => finished = true;
+        }
+    };
+
     var initKeyHandlers = function(hero: IPerson)
     {
         listenKey(Kb.LEFT, () => hero.haste(-1,0)); // left
@@ -100,6 +134,10 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         listenKey(Kb.NUMPAD4, () => moveCam(-10,0));
         listenKey(Kb.NUMPAD8, () => moveCam(0,-10));
         listenKey(Kb.NUMPAD5, () => moveCam(0,+10));
+
+        document.onmousedown = (e) => e.which === 1 && handleMouseDown(e.clientX, e.clientY);
+        document.onmouseup = (e) => e.which === 1 && handleMouseUp(e.clientX, e.clientY);
+        document.onmousemove = (e) => handleMouseMove(e.clientX, e.clientY);
     };
 
     // supposed to read file with level data.
