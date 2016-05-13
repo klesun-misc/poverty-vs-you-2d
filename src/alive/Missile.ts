@@ -28,7 +28,7 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
     };
     var shape = makeShape();
 
-    var live = function()
+    var live = function(): IAlive[]
     {
         shape.x += vx;
         shape.y += vy;
@@ -38,6 +38,8 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         if (shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
             isDead = true;
         }
+
+        return [];
     };
 
     var interactWith = function(other: IAlive, prevPos: [number, number])
@@ -50,7 +52,6 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         getShape: () => shape,
         live: live,
         isDead: () => isDead,
-        producedChildren: [],
         getBounds: () => BOUNDS,
         interactWith: interactWith,
         takeDamage: () => isDead = true,

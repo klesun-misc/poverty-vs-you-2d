@@ -22,7 +22,7 @@ const G = 4;
 const HEIGHT = 75;
 const WIDTH = 55;
 
-const BOUNDS: rect_t = [-WIDTH * 8/55, -HEIGHT * 9/10, WIDTH * 16/55, HEIGHT * 9/10];
+const BOUNDS: rect_t = [-WIDTH / 2 -WIDTH * 10/55, -HEIGHT * 9/10, WIDTH * 16/55, HEIGHT * 9/10];
 
 export function Person(params: IParams): IPerson
 {
@@ -41,18 +41,33 @@ export function Person(params: IParams): IPerson
     // game logic info
     var health = 100;
     var mana = 100;
+
     var healthBar = new createjs.Shape();
     var manaBar = new createjs.Shape();
 
+    var spriteSheet = new createjs.SpriteSheet({
+        images: ['imgs/run_sprite/spritesheet.png'],
+        frames: {width: WIDTH, height: HEIGHT},
+        animations: {
+            run: {
+                frames: [0,1,2,3,4,5,6,7,8,9,10,11],
+                speed: 0.5,
+            },
+        },
+        framerate: 45,
+    });
+    var animation = new createjs.Sprite(spriteSheet, 'run');
+    animation.regX = 30;
+
+    var faceForward = true;
     var isDead = false;
-    var producedChildren: IAlive[] = [];
 
     var changeMana = function(n: number)
     {
         if (mana + n >= 0 && mana + n <= 100) {
             mana += n;
             manaBar.graphics.clear().beginFill('#44f')
-                .rect(-WIDTH / 4, -HEIGHT - 5, mana / 100 * WIDTH / 2, 5);
+                .rect(BOUNDS[0] -WIDTH / 8, -HEIGHT - 5, mana / 100 * WIDTH / 2, 5);
             return true;
         } else {
             return false;
@@ -63,7 +78,7 @@ export function Person(params: IParams): IPerson
     {
         health += n;
         healthBar.graphics.clear().beginFill('#f00')
-            .rect(-WIDTH / 4, -HEIGHT - 12, health/100 * WIDTH / 2, 5);
+            .rect(BOUNDS[0] -WIDTH / 8, -HEIGHT - 12, health/100 * WIDTH / 2, 5);
 
         if (health <= 0) {
             isDead = true;
@@ -74,18 +89,6 @@ export function Person(params: IParams): IPerson
     {
         var cont = new createjs.Container();
 
-        var spriteSheet = new createjs.SpriteSheet({
-            images: ['imgs/run_sprite/spritesheet.png'],
-            frames: {width: WIDTH, height: HEIGHT},
-            animations: {
-                run: {
-                    frames: [0,1,2,3,4,5,6,7,8,9,10,11],
-                    speed: 0.5,
-                },
-            },
-            framerate: 45,
-        });
-        var animation = new createjs.Sprite(spriteSheet, 'run');
         animation.x = -WIDTH * 6/11;
         animation.y = -HEIGHT;
 
@@ -109,6 +112,14 @@ export function Person(params: IParams): IPerson
     var shape = makePersonShape();
 
     var haste = function(dvx: number,dvy: number) {
+        if (faceForward && dvx < 0) {
+            faceForward = false;
+            animation.scaleX *= -1;
+        } else if (!faceForward && dvx > 0) {
+            faceForward = true;
+            animation.scaleX *= -1;
+        }
+
         boostX = dvx;
         boostY = dvy;
     };
@@ -177,24 +188,30 @@ export function Person(params: IParams): IPerson
 
     var live = function()
     {
+        var producedChildren: IAlive[] = [];
+
         applyGravity();
         if (castingFireball) {
             castingFireball = false;
             if (changeMana(-33)) {
-                producedChildren.push(Missile(shape.x - WIDTH / 3 - 50, shape.y - HEIGHT * 3 / 4, 1, 0));
+                var args = faceForward
+                    ? [shape.x + BOUNDS[0] - 50 - 10, shape.y - HEIGHT * 3 / 4, 1, 0]
+                    : [shape.x + BOUNDS[0] + BOUNDS[2] + 10, shape.y - HEIGHT * 3 / 4, -1, 0];
+                producedChildren.push(Missile.apply(this, args));
             } else {
                 alert('Out of mana');
             }
         }
 
         changeMana(1);
+
+        return producedChildren;
     };
 
     return {
         live: live,
         getShape: () => shape,
         isDead: () => isDead,
-        producedChildren: producedChildren,
         getBounds: () => BOUNDS,
         interactWith: interactWith,
         takeDamage: (n) => changeHealth(-n),

@@ -23,6 +23,7 @@ define(["require", "exports"], function (require, exports) {
             if (shape.x > 1000 || shape.x < 0 || shape.y > 500 || shape.y < 0) {
                 isDead = true;
             }
+            return [];
         };
         var interactWith = function (other, prevPos) {
             isDead = true;
@@ -32,7 +33,6 @@ define(["require", "exports"], function (require, exports) {
             getShape: function () { return shape; },
             live: live,
             isDead: function () { return isDead; },
-            producedChildren: [],
             getBounds: function () { return BOUNDS; },
             interactWith: interactWith,
             takeDamage: function () { return isDead = true; },

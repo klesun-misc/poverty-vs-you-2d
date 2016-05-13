@@ -16,7 +16,8 @@ export function Obstacle(x: number, y: number, w: number, h: number): IMissile
         var shape = new createjs.Shape();
 
         shape.graphics.ss(4)
-            .beginStroke('#0f0').drawRect(0,0,w,h);
+            .beginFill('#ccc').drawRect(0,0,w,h)
+            .beginStroke('#444').drawRect(0,0,w,h);
 
         shape.x = x;
         shape.y = y;
@@ -28,8 +29,7 @@ export function Obstacle(x: number, y: number, w: number, h: number): IMissile
     return {
         getShape: () => shape,
         getBounds: () => [0,0,w,h],
-        producedChildren: [],
-        live: () => {},
+        live: () => [],
         isDead: () => false,
         interactWith: () => {},
         takeDamage: () => {},

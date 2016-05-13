@@ -4,9 +4,8 @@ import DisplayObject = createjs.DisplayObject;
 
 export interface IAlive {
     getShape: () => DisplayObject,
-    live: () => void,
+    live: () => IAlive[],
     isDead: () => boolean,
-    producedChildren: IAlive[], // TODO: it should be returned by live(), not stored as property!
     getBounds: () => [number,number,number,number],
     interactWith: (other: IAlive, prevPos: [number, number]) => void,
     takeDamage: (n: number) => void,

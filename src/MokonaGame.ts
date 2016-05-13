@@ -51,16 +51,13 @@ export function MokonaGame(canvasEl: HTMLCanvasElement)
         var idxShift = 0;
         elements.slice().forEach((el, i) => {
 
-            el.producedChildren.length &&
-            el.producedChildren
-                .splice(0,el.producedChildren.length)
-                .forEach(addElement);
-
             if (!el.isDead()) {
                 var prevPos: [number, number] = [el.getShape().x, el.getShape().y];
-                el.live();
+
+                el.live().forEach(addElement);
+
                 elements.filter(other => el !== other && doIntersect(el, other))
-                    .forEach(o => el.interactWith(o, prevPos))
+                    .forEach(o => el.interactWith(o, prevPos));
             } else {
                 stage.removeChild(el.getShape());
                 elements.splice(i + idxShift--, 1);
