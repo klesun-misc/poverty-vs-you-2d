@@ -89,11 +89,13 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         });
     };
 
-    var handlerDict: {[k: number]: () => void} = {};
-    document.onkeydown = (e) =>
-        e.keyCode in handlerDict && handlerDict[e.keyCode]();
+    /** @debug */
+    console.log(123);
 
-    var listenKey = (n: number,cb: () => void) => (handlerDict[n] = cb);
+    var handlerDict: {[k: number]: () => void} = {};
+    canvasEl.onkeydown = (e) => e.keyCode in handlerDict && handlerDict[e.keyCode]();
+
+    var listenKey = (n: number,cb: () => void) => handlerDict[n] = cb;
     var floor = () => canvasEl.height - 20;
 
     var handleMouseUp = function(x: number, y: number)
@@ -106,6 +108,7 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
 
     const handleMouseDown = function(x0: number, y0: number)
     {
+        canvasEl.focus();
         var selectedTool = $(editorPalette).find('input[name="selectedTool"]:checked').val();
 
         if (selectedTool === 'draw') {
@@ -135,9 +138,18 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         listenKey(Kb.NUMPAD8, () => moveCam(0,-10));
         listenKey(Kb.NUMPAD5, () => moveCam(0,+10));
 
-        document.onmousedown = (e) => e.which === 1 && handleMouseDown(e.clientX, e.clientY);
-        document.onmouseup = (e) => e.which === 1 && handleMouseUp(e.clientX, e.clientY);
-        document.onmousemove = (e) => handleMouseMove(e.clientX, e.clientY);
+        canvasEl.onmousedown = (e) => e.which === 1 && handleMouseDown(
+            e.clientX - $(canvasEl).offset().left,
+            e.clientY - $(canvasEl).offset().top
+        );
+        canvasEl.onmouseup = (e) => e.which === 1 && handleMouseUp(
+            e.clientX - $(canvasEl).offset().left,
+            e.clientY - $(canvasEl).offset().top
+        );
+        canvasEl.onmousemove = (e) => handleMouseMove(
+            e.clientX - $(canvasEl).offset().left,
+            e.clientY - $(canvasEl).offset().top
+        );
     };
 
     // supposed to read file with level data.
