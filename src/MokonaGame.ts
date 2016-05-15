@@ -67,8 +67,15 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
 
                 el.live().forEach(addElement);
 
-                elements.filter(other => el !== other && doIntersect(el, other))
-                    .forEach(o => el.interactWith(o, prevPos));
+                /** @debug */
+                if (elements.filter(other => el !== other && doIntersect(el, other)).length > 1) {
+                    console.log('sejchas zastranet');
+                }
+
+                var collides = elements.filter(other =>
+                    el !== other && doIntersect(el, other));
+
+                el.interactWith(collides, prevPos);
             } else {
                 stage.removeChild(el.getShape());
                 elements.splice(i + idxShift--, 1);
@@ -150,6 +157,8 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
             e.clientX - $(canvasEl).offset().left,
             e.clientY - $(canvasEl).offset().top
         );
+
+        setTimeout(() => canvasEl.focus(), 200);
     };
 
     // supposed to read file with level data.

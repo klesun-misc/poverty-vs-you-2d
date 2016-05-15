@@ -12,8 +12,8 @@ interface IParams {
     y?: number,
 }
 
-const MAX_VX = 7.5;
-const DVX = 2;
+const MAX_VX = 10;
+const DVX = 3;
 const DVY = 30;
 const G = 4;
 
@@ -147,7 +147,7 @@ export function Person(params: IParams): IPerson
 
         shape.y < floor()
             ? vy += G
-            : vx = Tls.lim(Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
+            : vx = Tls.toZero(vx, DVX / 2);
 
         if (floorAlive !== null && (
             floorAlive.isDead() ||
@@ -161,37 +161,51 @@ export function Person(params: IParams): IPerson
         }
 
         if (floorAlive !== null) {
-            vx += DVX * boostX; boostX = 0;
-            vy += DVY * boostY; boostY = 0;
+            boostX && Math.abs(vx) <= MAX_VX && (vx += DVX * boostX);
+            boostX = 0;
+            vy += DVY * boostY;
+            boostY = 0;
         } else {
             boostX = boostY = 0;
         }
     };
 
-    var interactWith = function(other: IAlive, prevPos: [number, number])
+    var interactWith = function(collides: IAlive[], prevPos: [number, number])
     {
         var [adx,ady,aw,ah] = BOUNDS;
-        var [bdx,bdy,bw,bh] = other.getBounds();
+        var [ax,ay] = vadd(prevPos, [adx,ady]);
 
-        var [wasX, wasY] = prevPos;
+        collides.forEach(other => {
+            var [bdx,bdy,bw,bh] = other.getBounds();
+            var [bx,by] = vadd([other.getShape().x, other.getShape().y], [bdx,bdy]);
 
-        if (wasY + ady + ah <= other.getShape().y + bdy) {
-            // move this top
-            shape.y = other.getShape().y + bdy - ady - ah;
-            floorAlive = other;
+            if (ay + ah <= by) {
+                // move this top
+                shape.y = by - ady - ah;
+                floorAlive = other;
+                //vy = -Math.abs(vy);
 
-        } else if (wasY + ady >= other.getShape().y + bdy + bh) {
-            // move this bottom
-            shape.y = other.getShape().y + bdy + bh - ady;
+            } else if (ay >= by + bh) {
+                // move this bottom
+                //vy = +Math.abs(vy);
+                shape.y = by + bh - ady;
+                vy = Math.max(0, vy);
+                shape.x -= vx; // TODO: we should do moving _after_ collision resolution (foreseen) to avoid that
+                changeHealth(-10);
 
-        } else if (wasX + adx + aw <= other.getShape().x + bdx) {
-            // move this left
-            shape.x = other.getShape().x + bdx - adx - aw;
+            } else if (ax + aw <= bx) {
+                // move this left
+                //vx = -Math.abs(vx);
+                shape.x = bx - adx - aw;
 
-        } else if (wasX + adx >= other.getShape().x + bdx + bw) {
-            // move this right
-            shape.x = other.getShape().x + bdx + bw - adx;
-        }
+            } else if (ax >= bx + bw) {
+                // move this right
+                //vx = +Math.abs(vx);
+                shape.x = bx + bw - adx;
+            } else {
+                console.log('should not happen!');
+            }
+        });
     };
 
     var live = function()

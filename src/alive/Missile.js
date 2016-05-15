@@ -27,10 +27,12 @@ define(["require", "exports"], function (require, exports) {
             }
             return [];
         };
-        var interactWith = function (other, prevPos) {
-            isDead = true;
-            var v = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
-            other.takeDamage(4 * v);
+        var interactWith = function (collides, prevPos) {
+            if (collides.length > 0) {
+                isDead = true;
+                var v = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+                collides.forEach(function (c) { return c.takeDamage(4 * v); });
+            }
         };
         return {
             getShape: function () { return shape; },

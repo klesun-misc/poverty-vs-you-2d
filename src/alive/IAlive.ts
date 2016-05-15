@@ -7,7 +7,7 @@ export interface IAlive {
     live: () => IAlive[],
     isDead: () => boolean,
     getBounds: () => [number,number,number,number],
-    interactWith: (other: IAlive, prevPos: [number, number]) => void,
+    interactWith: (collides: IAlive[], prevPos: [number, number]) => void,
     takeDamage: (n: number) => void,
     getVector: () => [number, number],
 }

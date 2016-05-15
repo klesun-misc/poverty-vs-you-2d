@@ -44,11 +44,13 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         return [];
     };
 
-    var interactWith = function(other: IAlive, prevPos: [number, number])
+    var interactWith = function(collides: IAlive[], prevPos: [number, number])
     {
-        isDead = true;
-        var v = Math.sqrt(vx ** 2 + vy **2);
-        other.takeDamage(4 * v);
+        if (collides.length > 0) {
+            isDead = true;
+            var v = Math.sqrt(vx ** 2 + vy **2);
+            collides.forEach(c => c.takeDamage(4 * v));
+        }
     };
 
     return {

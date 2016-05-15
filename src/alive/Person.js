@@ -1,7 +1,7 @@
 ///<reference path="../../libs/d.ts/easeljs.d.ts"/>
 define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (require, exports, Tools_1, Missile_1, Tools_2) {
-    var MAX_VX = 7.5;
-    var DVX = 2;
+    var MAX_VX = 10;
+    var DVX = 3;
     var DVY = 30;
     var G = 4;
     var HEIGHT = 75;
@@ -103,7 +103,7 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
             }
             shape.y < floor()
                 ? vy += G
-                : vx = Tools_1.Tls.lim(Tools_1.Tls.toZero(vx, DVX / 2), -MAX_VX, MAX_VX);
+                : vx = Tools_1.Tls.toZero(vx, DVX / 2);
             if (floorAlive !== null && (floorAlive.isDead() ||
                 shape.y !== floorAlive.getShape().y + floorAlive.getBounds()[1] ||
                 shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
@@ -113,7 +113,7 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
                 floorAlive = null;
             }
             if (floorAlive !== null) {
-                vx += DVX * boostX;
+                boostX && Math.abs(vx) <= MAX_VX && (vx += DVX * boostX);
                 boostX = 0;
                 vy += DVY * boostY;
                 boostY = 0;
@@ -123,27 +123,39 @@ define(["require", "exports", "./../Tools", "./Missile", "../Tools"], function (
             }
             var _b;
         };
-        var interactWith = function (other, prevPos) {
+        var interactWith = function (collides, prevPos) {
             var adx = BOUNDS[0], ady = BOUNDS[1], aw = BOUNDS[2], ah = BOUNDS[3];
-            var _a = other.getBounds(), bdx = _a[0], bdy = _a[1], bw = _a[2], bh = _a[3];
-            var wasX = prevPos[0], wasY = prevPos[1];
-            if (wasY + ady + ah <= other.getShape().y + bdy) {
-                // move this top
-                shape.y = other.getShape().y + bdy - ady - ah;
-                floorAlive = other;
-            }
-            else if (wasY + ady >= other.getShape().y + bdy + bh) {
-                // move this bottom
-                shape.y = other.getShape().y + bdy + bh - ady;
-            }
-            else if (wasX + adx + aw <= other.getShape().x + bdx) {
-                // move this left
-                shape.x = other.getShape().x + bdx - adx - aw;
-            }
-            else if (wasX + adx >= other.getShape().x + bdx + bw) {
-                // move this right
-                shape.x = other.getShape().x + bdx + bw - adx;
-            }
+            var _a = Tools_2.vadd(prevPos, [adx, ady]), ax = _a[0], ay = _a[1];
+            collides.forEach(function (other) {
+                var _a = other.getBounds(), bdx = _a[0], bdy = _a[1], bw = _a[2], bh = _a[3];
+                var _b = Tools_2.vadd([other.getShape().x, other.getShape().y], [bdx, bdy]), bx = _b[0], by = _b[1];
+                if (ay + ah <= by) {
+                    // move this top
+                    shape.y = by - ady - ah;
+                    floorAlive = other;
+                }
+                else if (ay >= by + bh) {
+                    // move this bottom
+                    //vy = +Math.abs(vy);
+                    shape.y = by + bh - ady;
+                    vy = Math.max(0, vy);
+                    shape.x -= vx; // TODO: we should do moving _after_ collision resolution (foreseen) to avoid that
+                    changeHealth(-10);
+                }
+                else if (ax + aw <= bx) {
+                    // move this left
+                    //vx = -Math.abs(vx);
+                    shape.x = bx - adx - aw;
+                }
+                else if (ax >= bx + bw) {
+                    // move this right
+                    //vx = +Math.abs(vx);
+                    shape.x = bx + bw - adx;
+                }
+                else {
+                    console.log('should not happen!');
+                }
+            });
         };
         var live = function () {
             var producedChildren = [];
