@@ -37,7 +37,16 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
      * the method returns true if something happened... my live would always return false =( */
     var elements: IAlive[] = [];
     var stage = new createjs.Stage(canvasEl);
-    var background = Background();
+    stage.addChild(Background(0)); // sun and sky
+    var backgrounds = [
+        Background(0.1, true),
+        Background(0.2, true),
+        Background(0.3, true),
+        Background(0.4, true),
+        Background(0.5, true),
+        Background(0.6, true),
+    ];
+    backgrounds.slice().reverse().forEach(b => stage.addChild(b));
 
     var addElement = function(element: IAlive)
     {
@@ -86,8 +95,10 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
 
     var moveCam = function(dx: number, dy: number)
     {
-        background.x -= dx / 2;
-        background.y -= dy / 2;
+        backgrounds.forEach((b,i) => {
+            b.x -= dx / (i + 2);
+            b.y -= dy / (i + 2);
+        });
 
         elements.forEach(a => {
             var sh = a.getShape();
@@ -95,9 +106,6 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
             sh.y -= dy;
         });
     };
-
-    /** @debug */
-    console.log(123);
 
     var handlerDict: {[k: number]: () => void} = {};
     canvasEl.onkeydown = (e) => e.keyCode in handlerDict && handlerDict[e.keyCode]();
@@ -169,11 +177,11 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         var flyingBlock = addElement(Obstacle(300, 400,200, 50));
         var flyingBlock2 = addElement(Obstacle(100, 300,50, 50));
         var floorBlock = addElement(Obstacle(0, 475,900, 10));
+        var floor2Block = addElement(Obstacle(1000, 475,9000, 10));
     };
 
     var start = function()
     {
-        stage.addChild(background);
         var hero = Person({x: 100, y: floor()});
 
         createjs.Ticker.framerate = 24;
@@ -185,7 +193,7 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
             var heroX = sh.x + dx + w / 2;
             var heroY = sh.y + dy + h / 2;
             var camCenterX = 500;
-            var camCenterY = 250;
+            var camCenterY = 300;
 
             if (Math.abs(camCenterX - heroX) >= 1 ||
                 Math.abs(camCenterY - heroY) >= 1

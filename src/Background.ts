@@ -7,8 +7,10 @@ interface IHouse {
     draw: () => void,
 }
 
-export function Background()
+export function Background(offsetKoef: number, onlyHouses?: boolean)
 {
+    onlyHouses = onlyHouses || false;
+
     /** @params l - left index inclusive, r - right index exclusive */
     var range = (l: number, r: number): Array<number> =>
         Array.apply(null, Array(r - l)).map((nop: void, i: number) => l + i);
@@ -40,19 +42,20 @@ export function Background()
 
             var x = x2;
 
-            road.graphics.beginStroke('#ccc').beginFill('#bbb')
+            onlyHouses || road.graphics.beginStroke('#ccc').beginFill('#bbb')
                 .moveTo(voidPoint.x, voidPoint.y)
                 .lineTo(x1, h)
                 .lineTo(x2, h)
                 .endFill().endStroke();
 
             if (lastX !== null) {
-                var lineHouseCount = Math.random() * 5 | 0;
+                var lineHouseCount = Math.random() * 1.5 | 0;
                 range(0, lineHouseCount).forEach(function(j)
                 {
                     var minDistance = 0.3;
                     var maxDistance = 0.9;
-                    var distance = Math.random() * (maxDistance - minDistance) + minDistance;
+                    //var distance = Math.random() * (maxDistance - minDistance) + minDistance;
+                    var distance = offsetKoef;
 
                     var x1 = lastX - (lastX - voidPoint.x) * distance;
                     var y1 = h - (h - voidPoint.y) * distance;
@@ -60,7 +63,7 @@ export function Background()
                     var hh = (300 + Math.random() * 300) * (1 - distance);
 
                     var offset = (distance - minDistance) / (maxDistance - minDistance);
-                    var color = '#' + Tls.getBetween([192,192,192], [32,32,32], offset)
+                    var color = '#' + Tls.getBetween([192,192,192], [32,32,32], distance)
                             .map(n => n.toString(16)).join('');
 
                     houses.push({
@@ -77,7 +80,9 @@ export function Background()
             lastX = x;
         });
 
-        houses.sort((h1,h2) => h2.distance - h1.distance).forEach(h => h.draw());
+        onlyHouses && houses.sort((h1,h2) => h2.distance - h1.distance).forEach(h => h.draw());
+        street.cache(0,0,w,h);
+        street.y = 0;
 
         return street;
     };
@@ -105,11 +110,11 @@ export function Background()
         return sun;
     };
 
-    bg.addChild(bgcolor);
-    bg.addChild(makeSun());
+    onlyHouses || bg.addChild(bgcolor);
+    onlyHouses || bg.addChild(makeSun());
     bg.addChild(makeRoad());
 
-    bg.cache(0, 0, 1000, 500);
+    //bg.cache(0, 0, 1000, 500);
 
     return bg;
 };
