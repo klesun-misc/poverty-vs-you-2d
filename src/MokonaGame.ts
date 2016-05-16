@@ -183,9 +183,14 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
             var sh = hero.getShape();
             var [dx,dy,w,h] = hero.getBounds();
             var heroX = sh.x + dx + w / 2;
-            var camCenter = 500;
-            if (Math.abs(camCenter - heroX) >= 1) {
-                moveCam(heroX - camCenter, 0);
+            var heroY = sh.y + dy + h / 2;
+            var camCenterX = 500;
+            var camCenterY = 250;
+
+            if (Math.abs(camCenterX - heroX) >= 1 ||
+                Math.abs(camCenterY - heroY) >= 1
+            ) {
+                moveCam(heroX - camCenterX, heroY - camCenterY);
             }
         });
 
