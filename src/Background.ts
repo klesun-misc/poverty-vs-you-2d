@@ -29,7 +29,7 @@ export function Background(offsetKoef: number, onlyHouses?: boolean)
         // mid of canvas, for now hardcoded TODO: make it variable
         var w = 1000, h = 500;
 
-        var voidPoint = {x: w / 2, y: h * 3 / 4};
+        var voidPoint = {x: w / 2, y: h / 2};
 
         var houses: IHouse[] = [];
 
@@ -71,7 +71,7 @@ export function Background(offsetKoef: number, onlyHouses?: boolean)
                         draw: function() {
                             var house = new createjs.Shape();
                             street.addChild(house);
-                            house.x = x1; house.y = y1;
+                            house.x = x1; house.y = h;
                             house.graphics.beginStroke('#ccc').beginFill(color).rect(0,0,wh,-hh);
                         }
                     });
@@ -81,8 +81,8 @@ export function Background(offsetKoef: number, onlyHouses?: boolean)
         });
 
         onlyHouses && houses.sort((h1,h2) => h2.distance - h1.distance).forEach(h => h.draw());
-        street.cache(0,0,w,h);
-        street.y = 0;
+        //street.cache(0,0,w,h);
+        //street.y = 0;
 
         return street;
     };
@@ -101,17 +101,20 @@ export function Background(offsetKoef: number, onlyHouses?: boolean)
             var x = Math.sin(angle) * r;
             var y = Math.cos(angle) * r;
 
-            sun.graphics.moveTo(0,0).beginStroke('#ff0').drawCircle(x, y, r);
+            sun.graphics.moveTo(0,0).beginStroke('#f88').drawCircle(x, y, r);
             sun.x = x0; sun.y = y0;
         }
 
-        // createjs.Ticker.addEventListener('tick', _ => sun.rotation += 0.02);
+        var blurFilter = new createjs.BlurFilter(40,40,1);
+        sun.filters = [blurFilter];
+        sun.cache(-100, -100, 1000, 500);
 
         return sun;
     };
 
     onlyHouses || bg.addChild(bgcolor);
-    onlyHouses || bg.addChild(makeSun());
+    onlyHouses || range(0,15).forEach(i => bg.addChild(makeSun()));
+
     bg.addChild(makeRoad());
 
     //bg.cache(0, 0, 1000, 500);
