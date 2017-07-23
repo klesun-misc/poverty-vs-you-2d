@@ -1,11 +1,11 @@
-///<reference path="../../libs/d.ts/easeljs.d.ts"/>
+///<reference path="../../../../libs/dts/easeljs/index.d.ts"/>
 
 import {Tls} from "./../Tools";
-import {IAlive} from "./IAlive";
-import {IMissile} from "./Missile";
+import {IGameObject} from "./IGameObject";
 import {Missile} from "./Missile";
 import {rect_t} from "../MokonaGame";
 import {vadd} from "../Tools";
+import {S} from "../../../../src/utils/S";
 
 interface IParams {
     x?: number,
@@ -17,53 +17,54 @@ const DVX = 3;
 const DVY = 30;
 const G = 4;
 
-const HEIGHT = 75;
 const WIDTH = 55;
+const HEIGHT = 75;
 
-const BOUNDS: rect_t = [-WIDTH / 2 -WIDTH * 10/55, -HEIGHT * 9/10, WIDTH * 16/55, HEIGHT * 9/10];
+const RAD_A = WIDTH * 15/55;
+const BOUNDS: rect_t = [-WIDTH / 2 - RAD_A, -HEIGHT * 0.95, WIDTH - RAD_A * 2, HEIGHT * 0.95];
 
-export function Person(params: IParams): IPerson
+/** @return IGameObject */
+export function Person(params: IParams)
 {
-    var floorAlive: IAlive = null;
-    var floor = () => floorAlive !== null
+    let floorAlive: IGameObject = null;
+    let floor = () => floorAlive !== null
         ? floorAlive.getShape().y + floorAlive.getBounds()[1]
         : 999999999999999999;
 
-    var boostX = 0;
-    var boostY = 0;
-    var castingFireball = false;
+    let castingFireball = false;
 
-    var vx = 0;
-    var vy = -20;
+    let vx = 0;
+    let vy = -20;
 
     // game logic info
-    var health = 100;
-    var mana = 100;
+    let health = 100;
+    let mana = 100;
 
-    var healthBar = new createjs.Shape();
-    var manaBar = new createjs.Shape();
-    var vectorMarker = new createjs.Shape();
+    let healthBar = new createjs.Shape();
+    let manaBar = new createjs.Shape();
+    let vectorMarker = new createjs.Shape();
     vectorMarker.graphics.beginFill('#ff0').drawCircle(0,0,3);
     vectorMarker.alpha = 0.4;
 
-    var spriteSheet = new createjs.SpriteSheet({
-        images: ['imgs/run_sprite/spritesheet.png'],
+    let spriteSheet = new createjs.SpriteSheet({
+        images: ['imgs/run_sprite/spritesheet_55x75.png'],
         frames: {width: WIDTH, height: HEIGHT},
         animations: {
             run: {
-                frames: [0,1,2,3,4,5,6,7,8,9,10,11],
-                speed: 0.5,
+                // there are 6 cols in 5 rows of sprites and last 1 is same as the first
+                frames: S.range(0, 6 * 5 - 1),
+                speed: 1,
             },
         },
         framerate: 45,
     });
-    var animation = new createjs.Sprite(spriteSheet, 'run');
+    let animation = new createjs.Sprite(spriteSheet, 'run');
     animation.regX = 30;
 
-    var faceForward = true;
-    var isDead = false;
+    let faceForward = true;
+    let isDead = false;
 
-    var changeMana = function(n: number)
+    let changeMana = function(n: number)
     {
         if (mana + n >= 0 && mana + n <= 100) {
             mana += n;
@@ -75,7 +76,7 @@ export function Person(params: IParams): IPerson
         }
     };
 
-    var changeHealth = function(n: number)
+    let changeHealth = function(n: number)
     {
         health += n;
         healthBar.graphics.clear().beginFill('#f00')
@@ -86,18 +87,18 @@ export function Person(params: IParams): IPerson
         }
     };
 
-    var makePersonShape = function()
+    let makePersonShape = function()
     {
-        var cont = new createjs.Container();
+        let cont = new createjs.Container();
 
         animation.x = -WIDTH * 6/11;
         animation.y = -HEIGHT;
 
         cont.addChild(animation);
 
-        var aura = new createjs.Shape();
+        let aura = new createjs.Shape();
 
-        var [x,y,w,h] = BOUNDS;
+        let [x,y,w,h] = BOUNDS;
         aura.graphics.beginStroke('#88f').rect(x,y,w,h);
 
         cont.addChild(aura);
@@ -111,17 +112,19 @@ export function Person(params: IParams): IPerson
         return cont;
     };
 
-    var updateVectorMarker = function()
+    let updateVectorMarker = function()
     {
-        var [x,y,w,h] = BOUNDS;
+        let [x,y,w,h] = BOUNDS;
 
         vectorMarker.x = x + w / 2 + vx * 4;
         vectorMarker.y = y + h / 1/4 + vy * 4;
     };
 
-    var shape = makePersonShape();
+    let shape = makePersonShape();
 
-    var haste = function(dvx: number,dvy: number) {
+    let sign = (a: number) => a > 0 ? +1 : (a < 0 ? -1 : 0);
+
+    let haste = function(dvx: number,dvy: number) {
         if (faceForward && dvx < 0) {
             faceForward = false;
             animation.scaleX *= -1;
@@ -130,15 +133,20 @@ export function Person(params: IParams): IPerson
             animation.scaleX *= -1;
         }
 
-        boostX = dvx;
-        boostY = dvy;
+        let isFalling = floorAlive === null;
+        let mult = isFalling ? 0.50 : 1;
+        vx += DVX * dvx * mult;
+        if (!isFalling) {
+            vy += DVY * dvy;
+        }
+        vx = sign(vx) * Math.min(MAX_VX, Math.abs(vx));
     };
 
-    var getVector = (): [number, number] => floorAlive !== null
+    let getVector = (): [number, number] => floorAlive !== null
         ? vadd([vx, vy], floorAlive.getVector())
         : [vx, vy];
 
-    var applyGravity = function()
+    let applyGravity = function()
     {
         if (shape.y >= floor()) {
             vy = 0;
@@ -155,36 +163,33 @@ export function Person(params: IParams): IPerson
             shape.x + BOUNDS[0] + BOUNDS[2] < floorAlive.getShape().x + floorAlive.getBounds()[0] ||
             shape.x + BOUNDS[0] > floorAlive.getShape().x + floorAlive.getBounds()[0] + floorAlive.getBounds()[2]
         )) {
-            var [fvx,fvy] = floorAlive.getVector();
+            let [fvx,fvy] = floorAlive.getVector();
             [vx,vy] = [vx + fvx / 10, vy + fvy / 10];
             floorAlive = null;
         }
-
-        if (floorAlive !== null) {
-            boostX && Math.abs(vx) <= MAX_VX && (vx += DVX * boostX);
-            boostX = 0;
-            vy += DVY * boostY;
-            boostY = 0;
-        } else {
-            boostX = boostY = 0;
-        }
     };
 
-    var interactWith = function(collides: IAlive[], prevPos: [number, number])
+    let interactWith = function(collides: IGameObject[], prevPos: [number, number])
     {
-        var [adx,ady,aw,ah] = BOUNDS;
-        var [ax,ay] = vadd(prevPos, [adx,ady]);
+        let [adx,ady,aw,ah] = BOUNDS;
+        let [ax,ay] = vadd(prevPos, [adx,ady]);
+
+        // resolves collision (does not allow unit walk through a wall)
+        // current implementation has two major problems:
+        // 1) it does not take into account that unit may collide with multiple walls in
+        // same frame (say if you tried to go between =-like tunnel which is smaller than you)
+        // 2) it does not handle walls with negative height/width properly
 
         collides.forEach(other => {
-            var [bdx,bdy,bw,bh] = other.getBounds();
-            var [bx,by] = vadd([other.getShape().x, other.getShape().y], [bdx,bdy]);
+            let [bdx,bdy,bw,bh] = other.getBounds();
+            let [bx,by] = vadd([other.getShape().x, other.getShape().y], [bdx,bdy]);
 
             if (ay + ah <= by) {
                 // move this top
                 shape.y = by - ady - ah;
                 floorAlive = other;
+                other.takeDamage(Math.sqrt(vy * vy + vx * vx) * 1.0);
                 //vy = -Math.abs(vy);
-
             } else if (ay >= by + bh) {
                 // move this bottom
                 //vy = +Math.abs(vy);
@@ -192,25 +197,25 @@ export function Person(params: IParams): IPerson
                 vy = Math.max(0, vy);
                 shape.x -= vx; // TODO: we should do moving _after_ collision resolution (foreseen) to avoid that
                 changeHealth(-10);
-
             } else if (ax + aw <= bx) {
-                // move this left
-                //vx = -Math.abs(vx);
-                shape.x = bx - adx - aw;
-
-            } else if (ax >= bx + bw) {
                 // move this right
-                //vx = +Math.abs(vx);
+                shape.x = bx - adx - aw;
+                // nullify velocity if moving towards the obstacle
+                vx = Math.min(vx, 0);
+            } else if (ax >= bx + bw) {
+                // move this left
                 shape.x = bx + bw - adx;
+                // nullify velocity if moving towards the obstacle
+                vx = Math.max(vx, 0);
             } else {
                 console.log('should not happen!');
             }
         });
     };
 
-    var live = function()
+    let live = function()
     {
-        var producedChildren: IAlive[] = [];
+        let producedChildren: IGameObject[] = [];
 
         applyGravity();
         updateVectorMarker();
@@ -218,8 +223,8 @@ export function Person(params: IParams): IPerson
         if (castingFireball) {
             castingFireball = false;
             if (changeMana(-33)) {
-                var v = 2;
-                var args = faceForward
+                let v = 2;
+                let args = faceForward
                     ? [shape.x + BOUNDS[0] - 50 - 10, shape.y - HEIGHT * 3 / 4, v, 0]
                     : [shape.x + BOUNDS[0] + BOUNDS[2] + 10, shape.y - HEIGHT * 3 / 4, -v, 0];
                 producedChildren.push(Missile.apply(this, args));
@@ -239,16 +244,14 @@ export function Person(params: IParams): IPerson
         isDead: () => isDead,
         getBounds: () => BOUNDS,
         interactWith: interactWith,
-        takeDamage: (n) => changeHealth(-n),
+        takeDamage: (n: number) => changeHealth(-n),
         getVector: getVector,
 
         // game logic methods
         haste: haste,
         fireball: () => castingFireball = true,
     };
-};
-
-export interface IPerson extends IAlive {
-    haste: (dvx: number, dvy: number) => void,
-    fireball: () => void,
 }
+
+let dummy = 0?Person(null):null;
+export type IPerson = typeof dummy;

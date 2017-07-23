@@ -8,6 +8,6 @@ __pycache__
 .idea
 /HTML5Application/nbproject/private/
 
-/imgs
-/src/*.js
+#/imgs
+/src/**/*.js
 /src/*.js.map

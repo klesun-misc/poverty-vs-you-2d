@@ -1,23 +1,40 @@
 
-///<reference path="../libs/d.ts/easeljs.d.ts"/>
-///<reference path="../libs/d.ts/jquery.d.ts"/>
+///<reference path="../../../libs/dts/easeljs/index.d.ts"/>
+///<reference path="../../../libs/dts/jquery.d.ts"/>
 
 import DisplayObject = createjs.DisplayObject;
 import {Person} from "./alive/Person";
-import {Background} from "./Background";
+import {Background, IBackground} from "./Background";
 import {IPerson} from "./alive/Person";
 import {Kb} from "./KeyCodes";
-import {IAlive} from "./alive/IAlive";
-import {Obstacle} from "./alive/Obstacle";
-
-declare var Ns: any;
+import {IGameObject} from "./alive/IGameObject";
+import {Wall} from "./alive/Wall";
+import {Level1} from "./Level1";
+import {S} from "../../../src/utils/S";
+import {Decor} from "./alive/Decor";
 
 export type rect_t = [number, number, number, number];
 
-var doIntersect = function(a: IAlive, b: IAlive)
+let t4 = <T1,T2,T3,T4>(a:T1,b:T2,c:T3,d:T4): [T1,T2,T3,T4] => [a,b,c,d];
+
+/** normalizes rect with negative width/height */
+let normRect = function([x,y,w,h]: number[]) {
+    if (w < 0) {
+        x += w;
+        w = -w;
+    }
+    if (h < 0) {
+        y += h;
+        h = -h;
+    }
+
+    return t4(x,y,w,h);
+};
+
+let doIntersect = function(a: IGameObject, b: IGameObject)
 {
-    var [ax,ay,aw,ah] = a.getBounds();
-    var [bx,by,bw,bh] = b.getBounds();
+    let [ax,ay,aw,ah] = normRect(a.getBounds());
+    let [bx,by,bw,bh] = normRect(b.getBounds());
 
     ax += a.getShape().x;
     ay += a.getShape().y;
@@ -35,20 +52,20 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
 {
     /** dict of objects with method live()
      * the method returns true if something happened... my live would always return false =( */
-    var elements: IAlive[] = [];
-    var stage = new createjs.Stage(canvasEl);
-    stage.addChild(Background(0)); // sun and sky
-    var backgrounds = [
-        Background(0.1, true),
-        Background(0.2, true),
-        Background(0.3, true),
-        Background(0.4, true),
-        Background(0.5, true),
-        Background(0.6, true),
+    let elements: IGameObject[] = [];
+    let stage = new createjs.Stage(canvasEl);
+    // stage.addChild(Background(0)); // sun and sky
+    let backgrounds: IBackground[] = [
+        // Background(0.1, true),
+        // Background(0.2, true),
+        // Background(0.31, true),
+        // Background(0.4, true),
+        // Background(0.5, true),
+        // Background(0.6, true),
     ];
     backgrounds.slice().reverse().forEach(b => stage.addChild(b));
 
-    var addElement = function(element: IAlive)
+    let addGameObject = function(element: IGameObject)
     {
         elements.push(element);
         stage.addChild(element.getShape());
@@ -56,32 +73,26 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         return element;
     };
 
-    var removeElement = function(element: IAlive)
+    let removeElement = function(element: IGameObject)
     {
         stage.removeChild(element.getShape());
         elements.splice(elements.indexOf(element), 1);
     };
 
-    var newFrame = function()
+    let newFrame = function()
     {
         // not sure this slice() is ok for performance
-        var idxShift = 0;
+        let idxShift = 0;
         elements.slice().forEach((el, i) => {
 
             if (!el.isDead()) {
-                var prevPos: [number, number] = [el.getShape().x, el.getShape().y];
+                let prevPos: [number, number] = [el.getShape().x, el.getShape().y];
 
                 el.getShape().x += el.getVector()[0];
                 el.getShape().y += el.getVector()[1];
+                el.live().forEach(addGameObject);
 
-                el.live().forEach(addElement);
-
-                /** @debug */
-                if (elements.filter(other => el !== other && doIntersect(el, other)).length > 1) {
-                    console.log('sejchas zastranet');
-                }
-
-                var collides = elements.filter(other =>
+                let collides = elements.filter(other =>
                     el !== other && doIntersect(el, other));
 
                 el.interactWith(collides, prevPos);
@@ -93,7 +104,7 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         stage.update();
     };
 
-    var moveCam = function(dx: number, dy: number)
+    let moveCam = function(dx: number, dy: number)
     {
         backgrounds.forEach((b,i) => {
             b.x -= dx / (i + 2);
@@ -101,39 +112,45 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         });
 
         elements.forEach(a => {
-            var sh = a.getShape();
+            let sh = a.getShape();
             sh.x -= dx;
             sh.y -= dy;
         });
     };
 
-    var handlerDict: {[k: number]: () => void} = {};
-    canvasEl.onkeydown = (e) => e.keyCode in handlerDict && handlerDict[e.keyCode]();
+    let pressedKeys = new Set();
+    let handlerDict: {[k: string]: () => void} = {};
+    canvasEl.onkeydown = (e) => {
+        S.opt(handlerDict[e.code]).get = f => f();
+        pressedKeys.add(e.code);
+    };
+    canvasEl.onkeyup = (e) => pressedKeys.delete(e.code);
+    canvasEl.onfocus = (e) => pressedKeys.clear();
 
-    var listenKey = (n: number,cb: () => void) => handlerDict[n] = cb;
-    var floor = () => canvasEl.height - 20;
+    let listenKey = (n: string, cb: () => void) => handlerDict[n] = cb;
+    let floor = () => canvasEl.height - 20;
 
-    var handleMouseUp = function(x: number, y: number)
+    let handleMouseUp = function(x: number, y: number)
     {
     };
 
-    var handleMouseMove = function(x: number, y: number)
+    let handleMouseMove = function(x: number, y: number)
     {
     };
 
     const handleMouseDown = function(x0: number, y0: number)
     {
         canvasEl.focus();
-        var selectedTool = $(editorPalette).find('input[name="selectedTool"]:checked').val();
+        let selectedTool = $(editorPalette).find('input[name="selectedTool"]:checked').val();
 
         if (selectedTool === 'draw') {
-            var currentObs = addElement(Obstacle(x0, y0, 5, 5));
-            var finished = false;
+            let currentObs = addGameObject(Wall([x0, y0, 5, 5]));
+            let finished = false;
 
             handleMouseMove = (x1, y1) => {
                 if (!finished) {
                     removeElement(currentObs);
-                    currentObs = addElement(Obstacle(x0, y0, x1 - x0, y1 - y0));
+                    currentObs = addGameObject(Wall(normRect([x0, y0, x1 - x0, y1 - y0])));
                 }
             };
 
@@ -141,17 +158,14 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         }
     };
 
-    var initKeyHandlers = function(hero: IPerson)
+    let initKeyHandlers = function(hero: IPerson)
     {
-        listenKey(Kb.LEFT, () => hero.haste(-1,0)); // left
-        listenKey(Kb.UP, () => hero.haste( 0,-1)); // up
-        listenKey(Kb.RIGHT, () => hero.haste(+1,0)); // right
-        listenKey(Kb.SPACE, hero.fireball); // space
+        listenKey('Space', hero.fireball); // space
 
-        listenKey(Kb.NUMPAD6, () => moveCam(+10,0));
-        listenKey(Kb.NUMPAD4, () => moveCam(-10,0));
-        listenKey(Kb.NUMPAD8, () => moveCam(0,-10));
-        listenKey(Kb.NUMPAD5, () => moveCam(0,+10));
+        listenKey('Numpad6', () => moveCam(+10,0));
+        listenKey('Numpad4', () => moveCam(-10,0));
+        listenKey('Numpad8', () => moveCam(0,-10));
+        listenKey('Numpad5', () => moveCam(0,+10));
 
         canvasEl.onmousedown = (e) => e.which === 1 && handleMouseDown(
             e.clientX - $(canvasEl).offset().left,
@@ -167,33 +181,43 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         );
 
         setTimeout(() => canvasEl.focus(), 200);
+
+        return () => {
+            if (pressedKeys.has('ArrowLeft')) hero.haste(-1,0);
+            if (pressedKeys.has('ArrowUp')) hero.haste( 0,-1);
+            if (pressedKeys.has('ArrowRight')) hero.haste(+1,0);
+        };
     };
 
     // supposed to read file with level data.
     // for now just creates hardcoded setup
-    var fillStage = function()
+    let fillStage = function()
     {
-        var villain = addElement(Person({x: 600, y: floor()}));
-        var flyingBlock = addElement(Obstacle(300, 400,200, 50));
-        var flyingBlock2 = addElement(Obstacle(100, 300,50, 50));
-        var floorBlock = addElement(Obstacle(0, 475,900, 10));
-        var floor2Block = addElement(Obstacle(1000, 475,9000, 10));
+        let level = Level1(floor());
+        for (let [name, alive] of Object.entries(level)) {
+            addGameObject(alive);
+        }
+        return level;
     };
 
-    var start = function()
+    let start = function()
     {
-        var hero = Person({x: 100, y: floor()});
+        let level = fillStage();
+        let hero = level.hero;
+
+        let handleKeys = initKeyHandlers(hero);
 
         createjs.Ticker.framerate = 24;
         createjs.Ticker.addEventListener('tick', () => {
+            handleKeys();
             newFrame();
 
-            var sh = hero.getShape();
-            var [dx,dy,w,h] = hero.getBounds();
-            var heroX = sh.x + dx + w / 2;
-            var heroY = sh.y + dy + h / 2;
-            var camCenterX = 500;
-            var camCenterY = 300;
+            let sh = hero.getShape();
+            let [dx,dy,w,h] = hero.getBounds();
+            let heroX = sh.x + dx + w / 2;
+            let heroY = sh.y + dy + h / 2;
+            let camCenterX = 500;
+            let camCenterY = 300;
 
             if (Math.abs(camCenterX - heroX) >= 1 ||
                 Math.abs(camCenterY - heroY) >= 1
@@ -201,12 +225,6 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
                 moveCam(heroX - camCenterX, heroY - camCenterY);
             }
         });
-
-        addElement(hero);
-
-        fillStage();
-
-        initKeyHandlers(hero);
     };
 
     return {

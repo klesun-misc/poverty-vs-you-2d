@@ -1,5 +1,5 @@
 
-///<reference path="../libs/d.ts/easeljs.d.ts"/>
+///<reference path="../../../libs/dts/easeljs/index.d.ts"/>
 
 import {Tls} from "./Tools";
 interface IHouse {
@@ -121,3 +121,6 @@ export function Background(offsetKoef: number, onlyHouses?: boolean)
 
     return bg;
 };
+
+let dummy = 0?Background(0,false):null;
+export type IBackground = typeof dummy;

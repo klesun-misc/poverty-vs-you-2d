@@ -1,5 +1,5 @@
 
-import {IAlive} from "./IAlive";
+import {IGameObject} from "./IGameObject";
 import DisplayObject = createjs.DisplayObject;
 import {rect_t} from "../MokonaGame";
 
@@ -9,7 +9,7 @@ const MAX_VX = 15;
 /** missile is (at least for now) a ball casted by
  * an IPerson, flying by a straight line, that
  * explodes and damages another IPerson on contact */
-export function Missile(x: number, y: number, vx: number, vy: number): IMissile
+export function Missile(x: number, y: number, vx: number, vy: number): IGameObject
 {
     var isDead = false;
     var fuel = 600;
@@ -30,7 +30,7 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
     };
     var shape = makeShape();
 
-    var live = function(): IAlive[]
+    var live = function(): IGameObject[]
     {
         fuel -= Math.sqrt(vx ** 2 + vy ** 2);
         shape.alpha = fuel / 600;
@@ -44,7 +44,7 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         return [];
     };
 
-    var interactWith = function(collides: IAlive[], prevPos: [number, number])
+    var interactWith = function(collides: IGameObject[], prevPos: [number, number])
     {
         if (collides.length > 0) {
             isDead = true;
@@ -59,11 +59,10 @@ export function Missile(x: number, y: number, vx: number, vy: number): IMissile
         isDead: () => isDead,
         getBounds: () => BOUNDS,
         interactWith: interactWith,
-        takeDamage: () => isDead = true,
+        takeDamage: (amount) => {},
         getVector: () => [vx, vy],
     };
 }
 
-export interface IMissile extends IAlive {
-
-}
+let dummy = 0?Missile(0,0,0,0):null;
+export type IMissile = typeof dummy;

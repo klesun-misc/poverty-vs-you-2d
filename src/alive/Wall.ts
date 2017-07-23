@@ -1,15 +1,13 @@
 
-import {IAlive} from "./IAlive";
 import DisplayObject = createjs.DisplayObject;
-import {IMissile} from "./Missile";
-import {rect_t} from "../MokonaGame";
+import {IGameObject} from "./IGameObject";
 
-/* an Obstacle is rectangular unchangeable object that person can
- * stand on also blocks path. you can not go through an Obstacle
+/* an Wall is rectangular unchangeable object that person can
+ * stand on also blocks path. you can not go through a Wall
  * nor from left, nor from right, nor from bottom*/
-export function Obstacle(x: number, y: number, w: number, h: number): IMissile
+export function Wall([x,y,w,h]: number[]): IGameObject
 {
-    var makeShape = function(): DisplayObject
+    let makeShape = function(): DisplayObject
     {
         var shape = new createjs.Shape();
 
@@ -22,7 +20,7 @@ export function Obstacle(x: number, y: number, w: number, h: number): IMissile
 
         return shape;
     };
-    var shape = makeShape();
+    let shape = makeShape();
 
     return {
         getShape: () => shape,
@@ -35,6 +33,5 @@ export function Obstacle(x: number, y: number, w: number, h: number): IMissile
     };
 }
 
-export interface IObstacle extends IAlive {
-
-}
+let dummy = 0?Wall(null):null;
+export type IWall = typeof dummy;

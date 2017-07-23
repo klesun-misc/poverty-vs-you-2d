@@ -1,13 +1,13 @@
-///<reference path="../../libs/d.ts/easeljs.d.ts"/>
+///<reference path="../../../../libs/dts/easeljs/index.d.ts"/>
 
 import DisplayObject = createjs.DisplayObject;
 
-export interface IAlive {
+export interface IGameObject {
     getShape: () => DisplayObject,
-    live: () => IAlive[],
+    live: () => IGameObject[],
     isDead: () => boolean,
     getBounds: () => [number,number,number,number],
-    interactWith: (collides: IAlive[], prevPos: [number, number]) => void,
+    interactWith: (collides: IGameObject[], prevPos: [number, number]) => void,
     takeDamage: (n: number) => void,
     getVector: () => [number, number],
 }

@@ -3,7 +3,7 @@
 
 var wanted = [
     './src/MokonaGame.js',
-    './libs/easeljs-0.8.2.combined.js',
+    '/libs/easeljs-0.8.2.combined.js',
     'https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js'
 ];
 
