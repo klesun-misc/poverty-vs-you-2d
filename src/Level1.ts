@@ -6,7 +6,6 @@ import {Person} from "./alive/Person";
 import {Wall} from "./alive/Wall";
 import {IGameObject} from "./alive/IGameObject";
 import {Decor} from "./alive/Decor";
-
 export let Level1 = function(floor: number) {
 
     let marioTrap = Wall([100, 300, 50, 50]);

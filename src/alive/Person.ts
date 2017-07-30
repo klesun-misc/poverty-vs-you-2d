@@ -246,6 +246,10 @@ export function Person(params: IParams)
         interactWith: interactWith,
         takeDamage: (n: number) => changeHealth(-n),
         getVector: getVector,
+        serialize: () => 1 && {
+            class: Person.name,
+            args: [<valid_json_t>params],
+        },
 
         // game logic methods
         haste: haste,
@@ -255,3 +259,4 @@ export function Person(params: IParams)
 
 let dummy = 0?Person(null):null;
 export type IPerson = typeof dummy;
+let dummy2: IGameObject = 0?Person(null):null;

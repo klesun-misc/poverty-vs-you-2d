@@ -61,6 +61,10 @@ export function Missile(x: number, y: number, vx: number, vy: number): IGameObje
         interactWith: interactWith,
         takeDamage: (amount) => {},
         getVector: () => [vx, vy],
+        serialize: () => 1 && {
+            class: Missile.name,
+            args: [x, y, vx, vy],
+        },
     };
 }
 

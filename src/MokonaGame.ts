@@ -12,6 +12,7 @@ import {Wall} from "./alive/Wall";
 import {Level1} from "./Level1";
 import {S} from "../../../src/utils/S";
 import {Decor} from "./alive/Decor";
+import { Gui } from "./Gui";
 
 export type rect_t = [number, number, number, number];
 
@@ -50,6 +51,8 @@ let doIntersect = function(a: IGameObject, b: IGameObject)
 
 export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLFieldSetElement)
 {
+    let gui = Gui(canvasEl, editorPalette);
+
     /** dict of objects with method live()
      * the method returns true if something happened... my live would always return false =( */
     let elements: IGameObject[] = [];
@@ -118,74 +121,37 @@ export function MokonaGame(canvasEl: HTMLCanvasElement, editorPalette: HTMLField
         });
     };
 
-    let pressedKeys = new Set();
-    let handlerDict: {[k: string]: () => void} = {};
-    canvasEl.onkeydown = (e) => {
-        S.opt(handlerDict[e.code]).get = f => f();
-        pressedKeys.add(e.code);
-    };
-    canvasEl.onkeyup = (e) => pressedKeys.delete(e.code);
-    canvasEl.onfocus = (e) => pressedKeys.clear();
-
-    let listenKey = (n: string, cb: () => void) => handlerDict[n] = cb;
     let floor = () => canvasEl.height - 20;
-
-    let handleMouseUp = function(x: number, y: number)
-    {
-    };
-
-    let handleMouseMove = function(x: number, y: number)
-    {
-    };
-
-    const handleMouseDown = function(x0: number, y0: number)
-    {
-        canvasEl.focus();
-        let selectedTool = $(editorPalette).find('input[name="selectedTool"]:checked').val();
-
-        if (selectedTool === 'draw') {
-            let currentObs = addGameObject(Wall([x0, y0, 5, 5]));
-            let finished = false;
-
-            handleMouseMove = (x1, y1) => {
-                if (!finished) {
-                    removeElement(currentObs);
-                    currentObs = addGameObject(Wall(normRect([x0, y0, x1 - x0, y1 - y0])));
-                }
-            };
-
-            handleMouseUp = () => finished = true;
-        }
-    };
-
     let initKeyHandlers = function(hero: IPerson)
     {
-        listenKey('Space', hero.fireball); // space
+        gui.listenKey('Space', hero.fireball); // space
 
-        listenKey('Numpad6', () => moveCam(+10,0));
-        listenKey('Numpad4', () => moveCam(-10,0));
-        listenKey('Numpad8', () => moveCam(0,-10));
-        listenKey('Numpad5', () => moveCam(0,+10));
+        gui.listenKey('Numpad6', () => moveCam(+10,0));
+        gui.listenKey('Numpad4', () => moveCam(-10,0));
+        gui.listenKey('Numpad8', () => moveCam(0,-10));
+        gui.listenKey('Numpad5', () => moveCam(0,+10));
 
-        canvasEl.onmousedown = (e) => e.which === 1 && handleMouseDown(
-            e.clientX - $(canvasEl).offset().left,
-            e.clientY - $(canvasEl).offset().top
-        );
-        canvasEl.onmouseup = (e) => e.which === 1 && handleMouseUp(
-            e.clientX - $(canvasEl).offset().left,
-            e.clientY - $(canvasEl).offset().top
-        );
-        canvasEl.onmousemove = (e) => handleMouseMove(
-            e.clientX - $(canvasEl).offset().left,
-            e.clientY - $(canvasEl).offset().top
-        );
+        gui.drag = (x0, y0) => {
+            if (gui.selectedTool === 'draw') {
+                let currentObs = addGameObject(Wall([x0, y0, 5, 5]));
+                return (x1,y1) => {
+                    removeElement(currentObs);
+                    currentObs = addGameObject(Wall(normRect([x0, y0, x1 - x0, y1 - y0])));
+                };
+            } else {
+                return () => {};
+            }
+        };
+
+        gui.export = () => {
+            alert('TODO: IMPLEMENT!');
+        };
 
         setTimeout(() => canvasEl.focus(), 200);
-
         return () => {
-            if (pressedKeys.has('ArrowLeft')) hero.haste(-1,0);
-            if (pressedKeys.has('ArrowUp')) hero.haste( 0,-1);
-            if (pressedKeys.has('ArrowRight')) hero.haste(+1,0);
+            if (gui.isPressed('ArrowLeft')) hero.haste(-1,0);
+            if (gui.isPressed('ArrowUp')) hero.haste( 0,-1);
+            if (gui.isPressed('ArrowRight')) hero.haste(+1,0);
         };
     };
 

@@ -1,14 +1,30 @@
 
 <head>
-    <script data-main="./index" src="/libs/require.js"></script>
+    <script src="/src/relquire.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+    <script src="/libs/easeljs-0.8.2.combined.js"></script>
 </head>
 
 <body>
-    <canvas id="demoCanvas" width="1000" height="500" tabIndex="1"></canvas>
-    <fieldset id="editorPalette">
-        <legend>Level Editing Tools</legend>
-        <label><input type="radio" name="selectedTool" value="none" checked="checked">none</label>
-        <label><input type="radio" name="selectedTool" value="draw">draw</label>
-        <label><input type="radio" name="selectedTool" value="resize">resize</label>
-    </fieldset>
+<canvas id="demoCanvas" width="1000" height="500" tabIndex="1"></canvas>
+<fieldset id="editorPalette">
+    <legend>Level Editing Tools</legend>
+    <label><input type="radio" name="selectedTool" value="none" checked="checked">none</label>
+    <label><input type="radio" name="selectedTool" value="draw">draw</label>
+    <label><input type="radio" name="selectedTool" value="resize">resize</label>
+    <button class="export-level" onclick="alert('Wait for JS!')">Export level</button>
+    <button class="import-level" onclick="alert('Wait for JS!')">Import level</button>
+</fieldset>
+
+<script>
+
+    let $$ = (s, parent) => [...(parent || document).querySelectorAll(s)];
+    require([
+        './src/MokonaGame.js',
+    ], (index) => index.MokonaGame(
+        document.getElementById('demoCanvas'),
+        document.getElementById('editorPalette')
+    ).start());
+
+</script>
 </body>

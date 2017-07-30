@@ -30,6 +30,10 @@ export function Wall([x,y,w,h]: number[]): IGameObject
         interactWith: () => {},
         takeDamage: () => {},
         getVector: () => [0,0],
+        serialize: () => 1 && {
+            class: 'Wall',
+            args: [x,y,w,h],
+        },
     };
 }
 

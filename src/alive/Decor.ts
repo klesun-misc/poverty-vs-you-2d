@@ -14,6 +14,10 @@ export function Decor(disObj: DisplayObject): IGameObject
         interactWith: () => {},
         takeDamage: () => {},
         getVector: () => [0,0],
+        serialize: () => 1 && {
+            class: Decor.name,
+            args: [],
+        },
     };
 }
 
